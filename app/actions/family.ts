@@ -39,13 +39,17 @@ export async function deleteFamilyAction(
     .from(families)
     .where(eq(families.id, session.familyId))
     .limit(1);
-  if (!family) return { error: "Could not find your family." };
+  if (!family) return { errorCode: { key: "errors.familyMissing" } };
   if (family.ownerId !== session.personId) {
-    return { error: "Only the family owner can delete the family." };
+    return { errorCode: { key: "errors.ownerOnly" } };
   }
   const confirm = (formData.get("confirm") ?? "").toString().trim();
   if (confirm !== family.name) {
-    return { fieldErrors: { confirm: `Type "${family.name}" to confirm.` } };
+    return {
+      fieldErrorCodes: {
+        confirm: { key: "errors.confirm", params: { name: family.name } },
+      },
+    };
   }
 
   await deleteFamily(db, session.familyId);

@@ -1,4 +1,7 @@
 "use client";
+import { formatNumber } from "@/lib/i18n";
+
+import { useTranslations, useLocale } from "@/components/i18n/LocaleProvider";
 
 import { useEffect, useRef } from "react";
 import { CircleCheck, Clock } from "lucide-react";
@@ -33,6 +36,9 @@ export function SubmitMustDo({
   chore: MustDo;
   timezone: string;
 }) {
+  const locale = useLocale();
+  const tr = useTranslations();
+
   const ref = useRef<HTMLDialogElement>(null);
 
   // Tap on the backdrop (the dialog itself, not its content) closes it.
@@ -48,8 +54,8 @@ export function SubmitMustDo({
 
   if (chore.windowState === "locked") {
     const label = chore.opensAt
-      ? opensLabel(new Date(chore.opensAt), timezone, new Date())
-      : "Locked right now";
+      ? opensLabel(new Date(chore.opensAt), timezone, new Date(), locale)
+      : tr("ui.locked.right.now");
     return (
       <li>
         <div className={styles.todoLocked}>
@@ -58,10 +64,14 @@ export function SubmitMustDo({
               <Clock size={20} />
             </span>
             <span className={styles.todoLockedText}>
-              <span className={styles.todoName}>{chore.name}</span>
+              <span className={styles.todoName}>
+                <bdi>{chore.name}</bdi>
+              </span>
               <span className={styles.todoLockedReason}>{label}</span>
             </span>
-            <span className={styles.todoPts}>+{chore.points}</span>
+            <span dir="ltr" className={styles.todoPts}>
+              +{formatNumber(locale, chore.points)}
+            </span>
           </div>
           {chore.opensAt ? <WindowCountdown opensAt={chore.opensAt} /> : null}
         </div>
@@ -79,8 +89,12 @@ export function SubmitMustDo({
         <span className={styles.todoIcon} aria-hidden="true">
           <IconByName name={chore.emoji} size={20} />
         </span>
-        <span className={styles.todoName}>{chore.name}</span>
-        <span className={styles.todoPts}>+{chore.points}</span>
+        <span className={styles.todoName}>
+          <bdi>{chore.name}</bdi>
+        </span>
+        <span dir="ltr" className={styles.todoPts}>
+          +{formatNumber(locale, chore.points)}
+        </span>
         <CircleCheck
           size={20}
           className={styles.todoCheck}
@@ -91,11 +105,13 @@ export function SubmitMustDo({
       <dialog
         ref={ref}
         className={sheet.sheet}
-        aria-label={`Log ${chore.name}`}
+        aria-label={tr("ui.log.name", { p0: chore.name })}
       >
-        <p className={sheet.sheetTitle}>Did you finish {chore.name}?</p>
+        <p className={sheet.sheetTitle}>
+          {tr("flow.confirmChore", { name: chore.name })}
+        </p>
         <p className={sheet.sheetBody}>
-          A grown-up will check it, then you get +{chore.points} points.
+          {tr("flow.choreApproval", { points: chore.points })}
         </p>
         <form action={submitChoreAction}>
           <input type="hidden" name="choreId" value={chore.id} />
@@ -104,7 +120,7 @@ export function SubmitMustDo({
             className={sheet.confirmBtn}
             onClick={() => ref.current?.close()}
           >
-            Yes, I did it! 🎉
+            {tr("ui.yes.i.did.it")}
           </button>
         </form>
         <button
@@ -112,7 +128,7 @@ export function SubmitMustDo({
           className={sheet.cancelBtn}
           onClick={() => ref.current?.close()}
         >
-          Not yet
+          {tr("ui.not.yet")}
         </button>
       </dialog>
     </li>

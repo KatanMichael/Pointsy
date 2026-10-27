@@ -54,12 +54,12 @@ export async function saveChoreAction(
 ): Promise<FormState> {
   const session = await requireParent();
   const parsed = parseChore(formData);
-  if (!parsed.success) return { fieldErrors: toFieldErrors(parsed.error) };
+  if (!parsed.success) return { fieldErrorCodes: toFieldErrors(parsed.error) };
 
   const rawId = formData.get("id");
   if (typeof rawId === "string" && rawId.length > 0) {
     const id = idSchema.safeParse(rawId);
-    if (!id.success) return { error: "Could not find that chore." };
+    if (!id.success) return { errorCode: { key: "errors.choreMissing" } };
     await updateChore(getDb(), session.familyId, id.data, parsed.data);
   } else {
     await createChore(getDb(), session.familyId, parsed.data);
@@ -128,15 +128,17 @@ export async function createCatalogItemAction(
 ): Promise<FormState> {
   const session = await requireParent();
   const kind = kindSchema.safeParse(formData.get("kind"));
-  if (!kind.success) return { error: "Unknown item type." };
+  if (!kind.success) return { errorCode: { key: "errors.generic" } };
 
   if (kind.data === "chore") {
     const parsed = parseChore(formData);
-    if (!parsed.success) return { fieldErrors: toFieldErrors(parsed.error) };
+    if (!parsed.success)
+      return { fieldErrorCodes: toFieldErrors(parsed.error) };
     await createChore(getDb(), session.familyId, parsed.data);
   } else {
     const parsed = parseReward(formData);
-    if (!parsed.success) return { fieldErrors: toFieldErrors(parsed.error) };
+    if (!parsed.success)
+      return { fieldErrorCodes: toFieldErrors(parsed.error) };
     await createReward(getDb(), session.familyId, parsed.data);
   }
   revalidatePath(PATHS[kind.data]);
@@ -151,16 +153,18 @@ export async function updateCatalogItemAction(
   const session = await requireParent();
   const kind = kindSchema.safeParse(formData.get("kind"));
   const id = idSchema.safeParse(formData.get("id"));
-  if (!kind.success) return { error: "Unknown item type." };
-  if (!id.success) return { error: "Could not find that item." };
+  if (!kind.success) return { errorCode: { key: "errors.generic" } };
+  if (!id.success) return { errorCode: { key: "errors.itemMissing" } };
 
   if (kind.data === "chore") {
     const parsed = parseChore(formData);
-    if (!parsed.success) return { fieldErrors: toFieldErrors(parsed.error) };
+    if (!parsed.success)
+      return { fieldErrorCodes: toFieldErrors(parsed.error) };
     await updateChore(getDb(), session.familyId, id.data, parsed.data);
   } else {
     const parsed = parseReward(formData);
-    if (!parsed.success) return { fieldErrors: toFieldErrors(parsed.error) };
+    if (!parsed.success)
+      return { fieldErrorCodes: toFieldErrors(parsed.error) };
     await updateReward(getDb(), session.familyId, id.data, parsed.data);
   }
   revalidatePath(PATHS[kind.data]);

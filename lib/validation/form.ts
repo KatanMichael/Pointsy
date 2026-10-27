@@ -1,22 +1,13 @@
-import type { z } from "zod";
+import type { UiError } from "@/lib/i18n/errors";
+export { validationErrors as toFieldErrors } from "@/lib/i18n/errors";
 
 /** Shared shape for server-action form results consumed via useActionState. */
 export interface FormState {
-  error?: string;
-  fieldErrors?: Record<string, string>;
+  errorCode?: UiError;
+  fieldErrorCodes?: Record<string, UiError>;
   ok?: boolean;
   /** Echoes which way a points change went, so the UI can confirm it precisely. */
   direction?: "award" | "deduct";
   /** Who a points change landed for, so the UI can name them back. */
   kidIds?: string[];
-}
-
-/** First error message per field, keyed by the field name. */
-export function toFieldErrors(error: z.ZodError): Record<string, string> {
-  const out: Record<string, string> = {};
-  for (const issue of error.issues) {
-    const key = String(issue.path[0] ?? "form");
-    if (!out[key]) out[key] = issue.message;
-  }
-  return out;
 }

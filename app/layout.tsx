@@ -1,11 +1,21 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Sora, Geist_Mono } from "next/font/google";
+import { Inter, Sora, Geist_Mono, Heebo } from "next/font/google";
 import { ServiceWorkerUpdater } from "@/components/pwa/ServiceWorkerUpdater";
+import { getRequestLocale } from "@/lib/i18n/server";
+import { direction } from "@/lib/i18n";
+import { LocaleProvider } from "@/components/i18n/LocaleProvider";
+import { LanguageSwitcher } from "@/components/i18n/LanguageSwitcher";
 import "./globals.css";
 
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
+});
+
+const heebo = Heebo({
+  variable: "--font-heebo",
+  subsets: ["hebrew", "latin"],
+  display: "swap",
 });
 
 const sora = Sora({
@@ -98,15 +108,17 @@ const ORG_LD = {
   sameAs: ["https://highfivery.com", "https://github.com/Highfivery/Pointsy"],
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const locale = await getRequestLocale();
   return (
     <html
-      lang="en"
-      className={`${inter.variable} ${sora.variable} ${geistMono.variable}`}
+      lang={locale}
+      dir={direction(locale)}
+      className={`${inter.variable} ${sora.variable} ${geistMono.variable} ${heebo.variable}`}
     >
       <body>
         <script
@@ -116,8 +128,11 @@ export default function RootLayout({
         <a className="skip-link" href="#main">
           Skip to content
         </a>
-        {children}
-        <ServiceWorkerUpdater />
+        <LocaleProvider locale={locale}>
+          <LanguageSwitcher />
+          {children}
+          <ServiceWorkerUpdater />
+        </LocaleProvider>
       </body>
     </html>
   );

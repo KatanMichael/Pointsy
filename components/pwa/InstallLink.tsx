@@ -1,5 +1,8 @@
 "use client";
 
+import { useLocale } from "@/components/i18n/LocaleProvider";
+import { systemCopy } from "@/lib/i18n/system";
+
 import { useState } from "react";
 import { useInstall } from "./useInstall";
 import { InstallGuide } from "./InstallGuide";
@@ -9,6 +12,7 @@ import { InstallGuide } from "./InstallGuide";
  * already installed or installing isn't supported in this browser.
  */
 export function InstallLink({ className }: { className?: string }) {
+  const copy = systemCopy(useLocale());
   const { ready, isIOS, isStandalone, canPromptNative, promptNative } =
     useInstall();
   const [guide, setGuide] = useState(false);
@@ -23,7 +27,7 @@ export function InstallLink({ className }: { className?: string }) {
         className={className}
         onClick={() => (canPromptNative ? promptNative() : setGuide(true))}
       >
-        Install app
+        {copy.installApp}
       </button>
       {guide ? <InstallGuide onClose={() => setGuide(false)} /> : null}
     </>

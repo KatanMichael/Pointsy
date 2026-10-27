@@ -1,3 +1,4 @@
+import { translate, type Locale } from "@/lib/i18n";
 /** Pure helpers for chore claim limits (no I/O — safe in client components). */
 
 export type LimitPeriod = "none" | "day" | "week";
@@ -12,8 +13,23 @@ export function formatChoreLimit(
   period: LimitPeriod,
   count: number,
   scope?: LimitScope,
+  locale: Locale = "en",
 ): string | null {
   if (period === "none") return null;
+  if (locale === "he")
+    return translate(locale, "domain.choreLimit", {
+      count,
+      period: translate(
+        locale,
+        period === "day" ? "domain.day" : "domain.week",
+      ),
+      scope: scope
+        ? translate(
+            locale,
+            scope === "per_kid" ? "domain.each" : "domain.shared",
+          )
+        : "",
+    });
   const unit = period === "day" ? "day" : "week";
   const base = count === 1 ? `Once a ${unit}` : `${count}× per ${unit}`;
   if (scope === "per_kid") return `${base} each`;
@@ -46,7 +62,28 @@ export function formatLogWindowSummary(
   days: number | null,
   start: string | null,
   end: string | null,
+  locale: Locale = "en",
 ): string | null {
+  if (locale === "he") {
+    const daysHe = ["ב׳", "ג׳", "ד׳", "ה׳", "ו׳", "ש׳", "א׳"];
+    const day =
+      days === null
+        ? null
+        : days === WEEKDAYS_MASK
+          ? "ימי שני–שישי"
+          : days === WEEKENDS_MASK
+            ? "שבת–ראשון"
+            : daysHe.filter((_, i) => (days & (1 << i)) !== 0).join(", ");
+    const time =
+      start && end
+        ? `${start}–${end}`
+        : start
+          ? `משעה ${start}`
+          : end
+            ? `עד ${end}`
+            : null;
+    return [day, time].filter(Boolean).join(", ") || null;
+  }
   let dayLabel: string | null = null;
   if (days !== null) {
     if (days === WEEKDAYS_MASK) dayLabel = "Weekdays";

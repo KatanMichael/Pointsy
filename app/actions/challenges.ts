@@ -40,7 +40,7 @@ export async function saveChallengeAction(
 ): Promise<FormState> {
   const session = await requireParent();
   const parsed = parseChallenge(formData);
-  if (!parsed.success) return { fieldErrors: toFieldErrors(parsed.error) };
+  if (!parsed.success) return { fieldErrorCodes: toFieldErrors(parsed.error) };
 
   const input = {
     ...parsed.data,
@@ -49,7 +49,7 @@ export async function saveChallengeAction(
   const rawId = formData.get("id");
   if (typeof rawId === "string" && rawId.length > 0) {
     const id = idSchema.safeParse(rawId);
-    if (!id.success) return { error: "Could not find that challenge." };
+    if (!id.success) return { errorCode: { key: "errors.challengeMissing" } };
     await updateChallenge(getDb(), session.familyId, id.data, input);
   } else {
     await createChallenge(getDb(), session.familyId, input, session.personId);

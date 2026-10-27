@@ -78,22 +78,23 @@ SEO רב־לשוני עם כתובות נפרדות, העדפות מסונכרנ
 
 קבצים שמסומנים כחדשים הם הצעות; יתר הנתיבים נבדקו בריפו.
 
-| אחריות | קבצים |
-| --- | --- |
-| locale, מילונים, plural/format, שגיאות | חדשים: `lib/i18n/{locale,messages,format,errors,server}.ts`, `lib/i18n/messages/{en,he}.ts` |
-| הקשר לקוח ובחירה | חדשים: `components/i18n/{LocaleProvider,LanguageSwitcher}.tsx`, `components/i18n/language-switcher.module.css`, `app/actions/locale.ts` |
-| SSR, גופנים, תצוגה משותפת | `app/layout.tsx`, `app/globals.css`, `components/ui/**`, `components/brand/**` |
-| הורים, ילדים וכניסה | `app/(auth)/**`, `app/enter/**`, `app/dashboard/**`, `app/award/**`, `app/manage/**`, `app/me/**`, `app/redeem/**`, `app/submit/**`, רכיבי התכונות המקבילים |
-| שגיאות, ערכי קטלוג וברירות מחדל | `app/actions/**`, `lib/validation/{form,schemas}.ts`, `lib/auth/register.ts`, `lib/categories/service.ts`, `lib/catalog/category.ts`, `components/manage/options.ts` |
-| שיווק ומסמכי מוצר | `app/page.tsx`, `app/(marketing)/**`, `app/(legal)/**`, `components/marketing/**` |
-| Push ו־PWA | `lib/push/{service,send}.ts`, `app/actions/push.ts`, `lib/db/schema.ts`, `app/sw.ts`, `app/manifest.ts`, `components/push/**`, `components/pwa/**`, מיגרציה חדשה ב־`drizzle/` |
-| בדיקות ותיעוד | חדשים: `tests/unit/i18n.test.ts`, `tests/unit/i18n-messages.test.ts`, `tests/integration/i18n.test.ts`, `tests/e2e/i18n.spec.ts`, `docs/i18n-coverage.md`; הרחבת בדיקות קיימות |
+| אחריות                                 | קבצים                                                                                                                                                                          |
+| -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| locale, מילונים, plural/format, שגיאות | חדשים: `lib/i18n/{locale,messages,format,errors,server}.ts`, `lib/i18n/messages/{en,he}.ts`                                                                                    |
+| הקשר לקוח ובחירה                       | חדשים: `components/i18n/{LocaleProvider,LanguageSwitcher}.tsx`, `components/i18n/language-switcher.module.css`, `app/actions/locale.ts`                                        |
+| SSR, גופנים, תצוגה משותפת              | `app/layout.tsx`, `app/globals.css`, `components/ui/**`, `components/brand/**`                                                                                                 |
+| הורים, ילדים וכניסה                    | `app/(auth)/**`, `app/enter/**`, `app/dashboard/**`, `app/award/**`, `app/manage/**`, `app/me/**`, `app/redeem/**`, `app/submit/**`, רכיבי התכונות המקבילים                    |
+| שגיאות, ערכי קטלוג וברירות מחדל        | `app/actions/**`, `lib/validation/{form,schemas}.ts`, `lib/auth/register.ts`, `lib/categories/service.ts`, `lib/catalog/category.ts`, `components/manage/options.ts`           |
+| שיווק ומסמכי מוצר                      | `app/page.tsx`, `app/(marketing)/**`, `app/(legal)/**`, `components/marketing/**`                                                                                              |
+| Push ו־PWA                             | `lib/push/{service,send}.ts`, `app/actions/push.ts`, `lib/db/schema.ts`, `app/sw.ts`, `app/manifest.ts`, `components/push/**`, `components/pwa/**`, מיגרציה חדשה ב־`drizzle/`  |
+| בדיקות ותיעוד                          | חדשים: `tests/unit/i18n.test.ts`, `tests/unit/i18n-messages.test.ts`, `tests/integration/i18n.test.ts`, `tests/e2e/i18n.spec.ts`, `docs/i18n-coverage.md`; הרחבת בדיקות קיימות |
 
 ## Task 1: תשתית מילונים ופורמט
 
 **Files:** קבצי `lib/i18n/` החדשים; `tests/unit/i18n.test.ts`, `tests/unit/i18n-messages.test.ts`.
 
 **Interfaces:**
+
 - `type Locale = "en" | "he"`; `resolveLocale(cookie: string | undefined, acceptLanguage: string | null): Locale`; `direction(locale: Locale): "ltr" | "rtl"`.
 - `MessageKey` נגזר ממילון אנגלי; מילון עברי מחויב לאותם מפתחות ולאותם פרמטרים.
 - `translate(locale, key, params?)` עם overloads טיפוסיים לפרמטרים; הודעות ספירה מכילות ענפי plural מלאים ומוכרעות באמצעות `Intl.PluralRules`.
@@ -111,6 +112,7 @@ SEO רב־לשוני עם כתובות נפרדות, העדפות מסונכרנ
 **Files:** `app/layout.tsx`, קבצי `components/i18n/`, `app/actions/locale.ts`, `lib/i18n/server.ts`, `lib/validation/schemas.ts`, כותרות/ניווט קיימים; `tests/e2e/i18n.spec.ts`.
 
 **Interfaces:**
+
 - `getRequestLocale(): Promise<Locale>` הוא server-only ומקבל cookies/headers לפי API הגרסה המותקנת; לעולם לא מאחסן locale גלובלי משותף לבקשות.
 - `LocaleProvider({locale, children})`; `useLocale()`, `useTranslations()` משתמשים באותו ערך SSR.
 - `setLocaleAction(input: unknown): Promise<{ok: boolean}>` מאמת enum עם Zod וכותב cookie לשנה, path=/, SameSite=Lax ו־Secure ב־Production.
@@ -127,6 +129,7 @@ SEO רב־לשוני עם כתובות נפרדות, העדפות מסונכרנ
 **Files:** מסכי auth/parent/kid ורכיביהם ממפת הקבצים; `app/actions/**`, `lib/validation/**`, `lib/i18n/errors.ts`, ברירות מחדל בהרשמה; `tests/integration/i18n.test.ts`.
 
 **Interfaces:**
+
 - `UiError = {key: MessageKey; params?: Record<string, string | number>}`, כאשר מפתחות השגיאה מוגבלים לתת־קבוצה ייעודית.
 - להרחיב `FormState` ו־`AuthState` ב־`errorCode?: UiError` ו־`fieldErrorCodes?: Record<string, UiError>`. לשמר שדות טקסט קיימים בזמן מעבר בלבד; להסירם לאחר שכל הצרכנים הוסבו.
 - `registerFamily` מקבל `locale?: Locale` עם ברירת מחדל `en`; `seedDefaultCategories(db, familyId, locale = "en")` מייצר שמות מקומיים בלי לשנות IDs.
@@ -165,6 +168,7 @@ SEO רב־לשוני עם כתובות נפרדות, העדפות מסונכרנ
 **Files:** `lib/db/schema.ts`, מיגרציית Drizzle חדשה, `lib/push/{service,send}.ts`, `app/actions/push.ts`, קריאות notify ב־`app/actions/**`, `app/sw.ts`, `app/manifest.ts`, `components/push/**`, `components/pwa/**`; בדיקות push/integration/e2e.
 
 **Interfaces:**
+
 - עמודת `locale` במנוי Push, `NOT NULL DEFAULT 'en'` עם הגבלה ל־`en/he`; נתונים קיימים נשארים תקינים.
 - `SendableSubscription` כולל `locale: Locale`. שמירת מנוי קוראת locale מאומת מהבקשה ולא מקבלת family/person מהלקוח.
 - `LocalizedPushPayload` מחזיק מפתחות הודעה ופרמטרים שאינם סודות; התרגום מתבצע לכל מנוי בשרת. payload לדפדפן כולל `lang` ו־`dir`.

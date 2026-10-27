@@ -1,3 +1,5 @@
+import { getRequestLocale } from "@/lib/i18n/server";
+import { translate, type Translator } from "@/lib/i18n";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth/session";
@@ -9,9 +11,15 @@ import { ScreenHeader } from "@/components/ui/ScreenHeader";
 import { ManageNav } from "@/components/manage/ManageNav";
 import manage from "@/components/manage/manage.module.css";
 
-export const metadata: Metadata = { title: "Rewards" };
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getRequestLocale();
+  return { title: translate(locale, "meta.app.manage.rewards.page.tsx.title") };
+}
 
 export default async function RewardsPage() {
+  const locale = await getRequestLocale();
+  const tr = translate.bind(null, locale) as Translator;
+
   const session = await getSession();
   if (!session) redirect("/sign-in");
   if (session.role !== "parent") redirect("/me");
@@ -26,8 +34,8 @@ export default async function RewardsPage() {
   return (
     <main id="main" className={manage.main}>
       <ScreenHeader
-        title="Rewards"
-        intro="Things kids can spend their points on."
+        title={tr("ui.rewards")}
+        intro={tr("ui.things.kids.can.spend.their.points.on")}
       />
 
       {rewards.length > 0 ? (
@@ -55,7 +63,7 @@ export default async function RewardsPage() {
         </ul>
       ) : (
         <p className={manage.empty}>
-          No rewards yet — tap “Add a reward” to create your first.
+          {tr("ui.no.rewards.yet.tap.add.a.reward.to.create")}
         </p>
       )}
 

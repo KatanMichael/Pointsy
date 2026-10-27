@@ -1,3 +1,5 @@
+import { getRequestLocale } from "@/lib/i18n/server";
+import { translate, type Translator } from "@/lib/i18n";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth/session";
@@ -9,9 +11,17 @@ import { ScreenHeader } from "@/components/ui/ScreenHeader";
 import { ManageNav } from "@/components/manage/ManageNav";
 import manage from "@/components/manage/manage.module.css";
 
-export const metadata: Metadata = { title: "Add a chore" };
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getRequestLocale();
+  return {
+    title: translate(locale, "meta.app.manage.chores.new.page.tsx.title"),
+  };
+}
 
 export default async function NewChorePage() {
+  const locale = await getRequestLocale();
+  const tr = translate.bind(null, locale) as Translator;
+
   const session = await getSession();
   if (!session) redirect("/sign-in");
   if (session.role !== "parent") redirect("/me");
@@ -25,8 +35,8 @@ export default async function NewChorePage() {
   return (
     <main id="main" className={manage.main}>
       <ScreenHeader
-        title="Add a chore"
-        intro="Set the points, who it’s for, and how often it counts."
+        title={tr("ui.add.a.chore")}
+        intro={tr("ui.set.the.points.who.it.s.for.and.how")}
       />
       <ChoreEditor
         kids={kids.map((k) => ({

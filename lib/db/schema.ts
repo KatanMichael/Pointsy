@@ -9,6 +9,7 @@
  *  - Points are integers and may be negative (balances are not floored).
  */
 import { sql } from "drizzle-orm";
+import type { Locale } from "@/lib/i18n/locale";
 import {
   pgEnum,
   pgTable,
@@ -19,6 +20,7 @@ import {
   timestamp,
   index,
   uniqueIndex,
+  check,
   type AnyPgColumn,
 } from "drizzle-orm/pg-core";
 
@@ -501,6 +503,7 @@ export const pushSubscriptions = pgTable(
     endpoint: text("endpoint").notNull().unique(),
     p256dh: text("p256dh").notNull(),
     auth: text("auth").notNull(),
+    locale: text("locale").$type<Locale>().notNull().default("en"),
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()
       .notNull(),
@@ -508,6 +511,7 @@ export const pushSubscriptions = pgTable(
   (t) => [
     index("push_subs_family_idx").on(t.familyId),
     index("push_subs_person_idx").on(t.personId),
+    check("push_subs_locale_check", sql`${t.locale} in ('en', 'he')`),
   ],
 );
 

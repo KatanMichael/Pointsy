@@ -30,7 +30,7 @@ export async function forgetFamilyAction(): Promise<void> {
 }
 
 export interface KidSignInState {
-  error?: string;
+  errorCode?: import("@/lib/i18n/errors").UiError;
   /**
    * Monotonic attempt counter. It bumps on every failed try — even when the
    * message text is identical (e.g. a repeated "That PIN isn't right.") — so the
@@ -49,7 +49,8 @@ export async function kidSignInAction(
     personId: formData.get("personId"),
     pin: formData.get("pin"),
   });
-  if (!parsed.success) return { error: "Enter your 4-digit PIN.", attempt };
+  if (!parsed.success)
+    return { errorCode: { key: "errors.pinRequired" }, attempt };
 
   const result = await verifyPin(
     getDb(),
@@ -60,17 +61,17 @@ export async function kidSignInAction(
 
   if (result.status === "locked") {
     return {
-      error: "Too many wrong tries — try again in a minute.",
+      errorCode: { key: "errors.pinLocked" },
       attempt,
     };
   }
   if (result.status === "invalid") {
     const tries = result.remaining;
     return {
-      error:
+      errorCode:
         tries > 0
-          ? `That PIN isn't right. ${tries} ${tries === 1 ? "try" : "tries"} left.`
-          : "That PIN isn't right.",
+          ? { key: "errors.pinTries", params: { count: tries } }
+          : { key: "errors.pinInvalid" },
       attempt,
     };
   }

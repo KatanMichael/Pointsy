@@ -107,6 +107,33 @@
   margin: 0;
 }
 
+html[lang="he"] {
+  --font-sans: var(--font-heebo), Arial, sans-serif;
+  --font-display: var(--font-sans);
+}
+
+html[lang="he"] h1,
+html[lang="he"] h2,
+html[lang="he"] h3 {
+  letter-spacing: normal;
+}
+
+input[type="email"],
+input[type="url"],
+input[type="number"],
+input[inputmode="numeric"] {
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+
+/* Only navigation arrows mirror; symbols, digits and the wordmark do not. */
+html:dir(rtl) .lucide-arrow-left,
+html:dir(rtl) .lucide-arrow-right,
+html:dir(rtl) .lucide-chevron-left,
+html:dir(rtl) .lucide-chevron-right {
+  transform: scaleX(-1);
+}
+
 html {
   height: 100%;
 }
@@ -177,7 +204,7 @@ a {
 /* Skip link revealed on focus. */
 .skip-link {
   position: absolute;
-  left: var(--space-4);
+  inset-inline-start: var(--space-4);
   top: -100px;
   background: var(--color-primary);
   color: var(--color-on-accent);

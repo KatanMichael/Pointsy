@@ -13,7 +13,7 @@
 .pull {
   margin: var(--space-6) 0;
   padding: var(--space-5) var(--space-6);
-  border-left: 3px solid var(--color-primary);
+  border-inline-start: 3px solid var(--color-primary);
   background: rgba(52, 211, 153, 0.05);
   border-radius: 0 var(--radius-md) var(--radius-md) 0;
 }

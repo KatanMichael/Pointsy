@@ -92,9 +92,13 @@ export async function changePointsAction(
     reason: formData.get("reason"),
   });
   if (!parsed.success) {
-    const { kidIds: recipients, ...fieldErrors } = toFieldErrors(parsed.error);
+    const { kidIds: recipients, ...fieldErrorCodes } = toFieldErrors(
+      parsed.error,
+    );
     // No field owns the recipient list, so show that one at form level.
-    return recipients ? { error: recipients, fieldErrors } : { fieldErrors };
+    return recipients
+      ? { errorCode: recipients, fieldErrorCodes }
+      : { fieldErrorCodes };
   }
 
   const { kidIds, direction, amount, reason } = parsed.data;
@@ -111,10 +115,9 @@ export async function changePointsAction(
     );
   } catch {
     return {
-      error:
-        direction === "award"
-          ? "Could not award points. Please try again."
-          : "Could not deduct points. Please try again.",
+      errorCode: {
+        key: direction === "award" ? "errors.award" : "errors.deduct",
+      },
     };
   }
 

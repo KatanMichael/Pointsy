@@ -41,6 +41,14 @@ export function Field({
         </p>
       ) : null}
       <input
+        dir={
+          rest.type === "email" ||
+          rest.type === "url" ||
+          rest.inputMode === "numeric" ||
+          rest.type === "number"
+            ? "ltr"
+            : "auto"
+        }
         id={id}
         name={name}
         required={required}

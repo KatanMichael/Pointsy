@@ -1,6 +1,8 @@
 "use client";
+import { useTranslations } from "@/components/i18n/LocaleProvider";
 
-import { useEffect, useRef } from "react";
+import { errorText } from "@/lib/i18n/errors";
+import { useActionState, useEffect, useRef } from "react";
 import { requestRedemptionAction } from "@/app/actions/redemptions";
 import styles from "./redeem-confirm.module.css";
 
@@ -23,7 +25,14 @@ export function RedeemButton({
   className?: string;
   children: React.ReactNode;
 }) {
+  const tr = useTranslations();
+
+  const [state, action, pending] = useActionState(requestRedemptionAction, {});
   const ref = useRef<HTMLDialogElement>(null);
+
+  useEffect(() => {
+    if (state.ok) ref.current?.close();
+  }, [state.ok]);
 
   // Close when the backdrop (the dialog element itself, not its content) is
   // tapped. Attached natively rather than via a JSX handler so it doesn't read
@@ -52,20 +61,28 @@ export function RedeemButton({
         {children}
       </button>
 
-      <dialog ref={ref} className={styles.sheet} aria-label={`Request ${name}`}>
-        <p className={styles.sheetTitle}>Request {name}?</p>
-        <p className={styles.sheetBody}>
-          This uses {cost} points, and a grown-up has to approve it. Only ask if
-          you really want it.
+      <dialog
+        ref={ref}
+        className={styles.sheet}
+        aria-label={tr("ui.request.name", { p0: name })}
+      >
+        <p className={styles.sheetTitle}>
+          {tr("flow.confirmRequest", { name })}
         </p>
-        <form action={requestRedemptionAction}>
+        <p className={styles.sheetBody}>
+          {tr("flow.requestCost", { points: cost })}
+        </p>
+        {state.errorCode ? (
+          <p role="alert">{errorText(tr, state.errorCode)}</p>
+        ) : null}
+        <form action={action}>
           <input type="hidden" name="rewardId" value={rewardId} />
           <button
             type="submit"
             className={styles.confirmBtn}
-            onClick={() => ref.current?.close()}
+            disabled={pending}
           >
-            Yes, request it
+            {tr("ui.yes.request.it")}
           </button>
         </form>
         <button
@@ -73,7 +90,7 @@ export function RedeemButton({
           className={styles.cancelBtn}
           onClick={() => ref.current?.close()}
         >
-          Not yet
+          {tr("ui.not.yet")}
         </button>
       </dialog>
     </>

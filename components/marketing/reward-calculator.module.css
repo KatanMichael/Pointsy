@@ -10,7 +10,7 @@
 
 .inputs {
   padding: var(--space-8);
-  border-right: 1px solid var(--color-border);
+  border-inline-end: 1px solid var(--color-border);
   display: flex;
   flex-direction: column;
   gap: var(--space-8);
@@ -79,7 +79,7 @@
   font: inherit;
   font-size: 0.9rem;
   font-weight: 600;
-  text-align: left;
+  text-align: start;
   cursor: pointer;
 }
 
@@ -119,13 +119,13 @@
 .approx {
   font-size: 1.4rem;
   color: var(--color-text-muted);
-  margin-right: 6px;
+  margin-inline-end: 6px;
 }
 
 .unit {
   font-size: 1.3rem;
   color: var(--color-text-muted);
-  margin-left: 6px;
+  margin-inline-start: 6px;
 }
 
 .resultCap {
@@ -275,7 +275,7 @@
     grid-template-columns: 1fr;
   }
   .inputs {
-    border-right: none;
+    border-inline-end: none;
     border-bottom: 1px solid var(--color-border);
   }
   .seg {

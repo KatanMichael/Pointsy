@@ -1,4 +1,6 @@
 "use client";
+import { translateFormState } from "@/lib/i18n/errors";
+import { useTranslations } from "@/components/i18n/LocaleProvider";
 
 import { useActionState, useState } from "react";
 import { Trash2 } from "lucide-react";
@@ -25,7 +27,10 @@ export function DangerDeleteForm({
   intro: string;
   hidden?: { name: string; value: string }[];
 }) {
-  const [state, formAction, pending] = useActionState(action, {});
+  const tr = useTranslations();
+
+  const [stateCodes, formAction, pending] = useActionState(action, {});
+  const state = translateFormState(stateCodes, tr);
   const [value, setValue] = useState("");
   const matches = value.trim() === confirmWord;
 
@@ -40,7 +45,7 @@ export function DangerDeleteForm({
       ))}
       <p className={styles.warn}>{intro}</p>
       <Field
-        label={`Type “${confirmWord}” to confirm`}
+        label={tr("ui.type.name.to.confirm", { p0: confirmWord })}
         name="confirm"
         value={value}
         onChange={(e) => setValue(e.target.value)}
@@ -53,7 +58,7 @@ export function DangerDeleteForm({
         disabled={!matches || pending}
       >
         <Trash2 size={16} aria-hidden="true" />
-        {pending ? "Deleting…" : buttonLabel}
+        {pending ? tr("ui.deleting") : buttonLabel}
       </button>
       {state.error ? <p className={form.formError}>{state.error}</p> : null}
     </form>

@@ -127,6 +127,7 @@ export interface SubmittableChore {
   remaining: number | null;
   canSubmit: boolean;
   reason: string | null;
+  reasonCode?: import("@/lib/i18n/chore-reason").ChoreReason | null;
   /** Time-of-day/day-of-week gate: "open" now, or "locked" until `opensAt`. */
   windowState: "open" | "locked";
   /** When a locked chore next opens (ISO instant), else null. */
@@ -246,6 +247,15 @@ export async function listSubmittableChores(
         remaining: null,
         canSubmit: false,
         reason: elig.reason,
+        reasonCode:
+          c.assignment === "specific"
+            ? { key: "domain.notYourChore" }
+            : c.currentTurnPersonId
+              ? {
+                  key: "domain.turn",
+                  params: { name: nameOf(c.currentTurnPersonId) },
+                }
+              : { key: "domain.notYourTurn" },
       });
       continue;
     }
@@ -326,6 +336,14 @@ export async function listSubmittableChores(
           remaining: 0,
           canSubmit: false,
           reason: who ? `${who} got it first` : `All done ${unit}`,
+          reasonCode: who
+            ? { key: "domain.gotFirst", params: { name: who } }
+            : {
+                key:
+                  c.limitPeriod === "day"
+                    ? "domain.allToday"
+                    : "domain.allWeek",
+              },
           closesAt,
           sharedTaken: true,
         });
@@ -339,6 +357,15 @@ export async function listSubmittableChores(
       remaining,
       canSubmit: remaining > 0,
       reason: remaining > 0 ? null : `Done ${unit}`,
+      reasonCode:
+        remaining > 0
+          ? null
+          : {
+              key:
+                c.limitPeriod === "day"
+                  ? "domain.doneToday"
+                  : "domain.doneWeek",
+            },
       closesAt,
     });
   }

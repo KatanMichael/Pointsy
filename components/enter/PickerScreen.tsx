@@ -1,3 +1,5 @@
+"use client";
+import { useTranslations } from "@/components/i18n/LocaleProvider";
 import type { FamilyLookup } from "@/lib/people/service";
 import { KidLogin } from "./KidLogin";
 import { Logo } from "@/components/brand/Logo";
@@ -14,6 +16,8 @@ export function PickerScreen({
 }: {
   initialFamily: FamilyLookup | null;
 }) {
+  const tr = useTranslations();
+
   return (
     <main id="main" className={styles.main}>
       <div className={styles.brand}>
@@ -23,7 +27,7 @@ export function PickerScreen({
         <KidLogin initialFamily={initialFamily} />
       </section>
       <p className={styles.footNote}>
-        Free forever · Private by design · No app store
+        {tr("ui.free.forever.private.by.design.no.app.store")}
       </p>
     </main>
   );

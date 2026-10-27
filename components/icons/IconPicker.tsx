@@ -1,3 +1,5 @@
+"use client";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import { iconOptions, IconByName } from "./registry";
 import styles from "./icon-picker.module.css";
 
@@ -20,7 +22,8 @@ export function IconPicker({
   options,
   defaultValue,
 }: IconPickerProps) {
-  const opts = iconOptions(options);
+  const locale = useLocale();
+  const opts = iconOptions(options, locale);
   const selected =
     defaultValue && options.includes(defaultValue)
       ? defaultValue

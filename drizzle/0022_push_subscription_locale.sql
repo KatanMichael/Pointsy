@@ -1,0 +1,2 @@
+ALTER TABLE "push_subscriptions" ADD COLUMN "locale" text DEFAULT 'en' NOT NULL;--> statement-breakpoint
+ALTER TABLE "push_subscriptions" ADD CONSTRAINT "push_subs_locale_check" CHECK ("push_subscriptions"."locale" in ('en', 'he'));

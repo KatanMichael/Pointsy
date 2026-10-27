@@ -1,3 +1,5 @@
+"use client";
+import { useTranslations } from "@/components/i18n/LocaleProvider";
 import { IconByName } from "@/components/icons/registry";
 import { RedeemButton } from "@/components/redeem/RedeemButton";
 import styles from "./hype.module.css";
@@ -23,6 +25,8 @@ export function RewardShelf({
   affordable: ShelfReward[];
   nextUp: ShelfReward | null;
 }) {
+  const tr = useTranslations();
+
   if (affordable.length === 0 && !nextUp) return null;
 
   return (
@@ -30,7 +34,7 @@ export function RewardShelf({
       {affordable.length > 0 ? (
         <section className={styles.shelf} aria-labelledby="redeem-now">
           <h2 id="redeem-now" className={styles.shelfTitle}>
-            🎉 You can get these now!
+            {tr("ui.you.can.get.these.now")}
           </h2>
           <ul className={styles.shelfRow}>
             {affordable.map((r) => (
@@ -44,8 +48,12 @@ export function RewardShelf({
                   <span className={styles.shelfIcon}>
                     <IconByName name={r.emoji} size={28} />
                   </span>
-                  <span className={styles.shelfName}>{r.name}</span>
-                  <span className={styles.shelfCost}>{r.cost} pts</span>
+                  <span className={styles.shelfName}>
+                    <bdi>{r.name}</bdi>
+                  </span>
+                  <span dir="ltr" className={styles.shelfCost}>
+                    {tr("flow.pts", { count: r.cost })}
+                  </span>
                 </RedeemButton>
               </li>
             ))}
@@ -56,23 +64,28 @@ export function RewardShelf({
       {nextUp ? (
         <section className={styles.almost} aria-labelledby="almost-there">
           <h2 id="almost-there" className={styles.shelfTitle}>
-            Almost there!
+            {tr("ui.almost.there")}
           </h2>
           <div className={styles.almostCard}>
             <span className={styles.shelfIcon}>
               <IconByName name={nextUp.emoji} size={28} />
             </span>
             <div className={styles.almostText}>
-              <span className={styles.shelfName}>{nextUp.name}</span>
+              <span className={styles.shelfName}>
+                <bdi>{nextUp.name}</bdi>
+              </span>
               <span className={styles.almostNeed}>
-                {nextUp.moreNeeded} more point
-                {nextUp.moreNeeded === 1 ? "" : "s"} to go!
+                {tr("flow.moreReward", { count: nextUp.moreNeeded })}
               </span>
               <progress
                 className={styles.bar}
                 value={Math.max(0, available)}
                 max={nextUp.cost}
-                aria-label={`${Math.max(0, available)} of ${nextUp.cost} points toward ${nextUp.name}`}
+                aria-label={tr("ui.name.of.name.points.toward.name", {
+                  p0: Math.max(0, available),
+                  p1: nextUp.cost,
+                  p2: nextUp.name,
+                })}
               />
             </div>
           </div>

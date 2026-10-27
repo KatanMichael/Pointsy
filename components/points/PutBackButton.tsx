@@ -1,4 +1,5 @@
 "use client";
+import { useTranslations } from "@/components/i18n/LocaleProvider";
 
 import { useEffect, useRef } from "react";
 import { Undo2 } from "lucide-react";
@@ -22,6 +23,8 @@ export function PutBackButton({
   amount: number;
   kidName: string;
 }) {
+  const tr = useTranslations();
+
   const ref = useRef<HTMLDialogElement>(null);
 
   // Close when the backdrop (the dialog element itself, not its content) is
@@ -42,7 +45,10 @@ export function PutBackButton({
       <button
         type="button"
         className={styles.undoBtn}
-        aria-label={`Put back ${reason} for ${kidName}`}
+        aria-label={tr("ui.put.back.name.for.name", {
+          p0: reason,
+          p1: kidName,
+        })}
         onClick={() => {
           // Open on the next frame so the dialog doesn't intercept the very
           // click that opened it (a webkit hit-test race).
@@ -55,12 +61,13 @@ export function PutBackButton({
       <dialog
         ref={ref}
         className={sheet.sheet}
-        aria-label={`Put back ${reason}`}
+        aria-label={tr("ui.put.back.name", { p0: reason })}
       >
-        <p className={sheet.sheetTitle}>Put back {reason}?</p>
+        <p className={sheet.sheetTitle}>
+          {tr("flow.putBackTitle", { name: reason })}
+        </p>
         <p className={sheet.sheetBody}>
-          Takes {amount} points back from {kidName}, and it stops counting
-          toward goals and challenges until it&apos;s done and approved again.
+          {tr("flow.putBackBody", { points: amount, name: kidName })}
         </p>
         <form action={undoEarnAction}>
           <input type="hidden" name="entryId" value={entryId} />
@@ -69,7 +76,7 @@ export function PutBackButton({
             className={sheet.confirmBtn}
             onClick={() => ref.current?.close()}
           >
-            Put it back
+            {tr("ui.put.it.back")}
           </button>
         </form>
         <button
@@ -77,7 +84,7 @@ export function PutBackButton({
           className={sheet.cancelBtn}
           onClick={() => ref.current?.close()}
         >
-          Cancel
+          {tr("ui.cancel")}
         </button>
       </dialog>
     </>

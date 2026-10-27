@@ -1,4 +1,5 @@
 "use client";
+import { useTranslations } from "@/components/i18n/LocaleProvider";
 
 import { IconByName } from "@/components/icons/registry";
 import styles from "./points.module.css";
@@ -27,11 +28,13 @@ export function AlsoGiveTo({
   onToggle: (id: string) => void;
   hint?: string;
 }) {
+  const tr = useTranslations();
+
   return (
     <fieldset className={styles.alsoCard}>
       {/* A floated legend is a normal block box, so it keeps the card's own
           look instead of straddling the top border. `.alsoBody` clears it. */}
-      <legend className={styles.alsoLabel}>Also give to</legend>
+      <legend className={styles.alsoLabel}>{tr("ui.also.give.to")}</legend>
       <div className={styles.alsoBody}>
         <div className={styles.chips}>
           {kids.map((k) => {
@@ -50,7 +53,7 @@ export function AlsoGiveTo({
                 >
                   <IconByName name={k.avatar} size={16} />
                 </span>
-                {k.name}
+                <bdi>{k.name}</bdi>
               </button>
             );
           })}

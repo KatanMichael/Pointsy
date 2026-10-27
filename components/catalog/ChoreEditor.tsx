@@ -1,4 +1,6 @@
 "use client";
+import { translateFormState } from "@/lib/i18n/errors";
+import { useTranslations } from "@/components/i18n/LocaleProvider";
 
 import { useActionState, useId, useState } from "react";
 import Link from "next/link";
@@ -46,34 +48,23 @@ export interface ChoreDefaults {
   logWindowEnd?: string | null;
 }
 
-const ASSIGN_OPTIONS: {
-  value: ChoreAssignment;
-  label: string;
-  hint: string;
-}[] = [
-  { value: "everyone", label: "Everyone", hint: "Any kid can do it" },
-  { value: "specific", label: "Specific kids", hint: "Only the kids you pick" },
-  {
-    value: "rotating",
-    label: "Take turns",
-    hint: "Passes to the next kid once the current one does it",
-  },
-];
-
 const initialState: FormState = {};
 
-/** Plain-English summary of the claim limit, clarifying per-kid vs shared. */
+/** Complete frequency and scope messages retain each language's word order. */
 function limitPreview(
   period: LimitPeriod,
   count: string,
   scope: LimitScope,
+  tr: import("@/lib/i18n").Translator,
 ): string {
-  const unit = period === "day" ? "day" : "week";
   const n = Math.max(1, Number(count) || 1);
-  const times = n === 1 ? `once a ${unit}` : `${n} times a ${unit}`;
-  return scope === "total"
-    ? `Up to ${times}, shared by everyone — first come, first served.`
-    : `Each kid can log this ${times}.`;
+  const frequency =
+    n === 1
+      ? tr(period === "day" ? "flow.onceDay" : "flow.onceWeek")
+      : tr(period === "day" ? "flow.timesDay" : "flow.timesWeek", { count: n });
+  return tr(scope === "total" ? "flow.limitShared" : "flow.limitEach", {
+    frequency,
+  });
 }
 
 export function ChoreEditor({
@@ -85,10 +76,35 @@ export function ChoreEditor({
   categories: EditorCategory[];
   defaults?: ChoreDefaults;
 }) {
-  const [state, action, pending] = useActionState(
+  const tr = useTranslations();
+
+  const ASSIGN_OPTIONS: {
+    value: ChoreAssignment;
+    label: string;
+    hint: string;
+  }[] = [
+    {
+      value: "everyone",
+      label: tr("ui.everyone"),
+      hint: tr("ui.any.kid.can.do.it"),
+    },
+    {
+      value: "specific",
+      label: tr("ui.specific.kids"),
+      hint: tr("ui.only.the.kids.you.pick"),
+    },
+    {
+      value: "rotating",
+      label: tr("ui.take.turns"),
+      hint: tr("ui.passes.to.the.next.kid.once.the.current.one.does.it"),
+    },
+  ];
+
+  const [stateCodes, action, pending] = useActionState(
     saveChoreAction,
     initialState,
   );
+  const state = translateFormState(stateCodes, tr);
   const errors = state.fieldErrors;
   const [assignment, setAssignment] = useState<ChoreAssignment>(
     defaults?.assignment ?? "everyone",
@@ -115,9 +131,9 @@ export function ChoreEditor({
       ) : null}
 
       <section className={styles.section}>
-        <h2 className={styles.sectionTitle}>Basics</h2>
+        <h2 className={styles.sectionTitle}>{tr("ui.basics")}</h2>
         <Field
-          label="Name"
+          label={tr("ui.name")}
           name="name"
           defaultValue={defaults?.name}
           error={errors?.name}
@@ -126,12 +142,12 @@ export function ChoreEditor({
         />
         <IconPicker
           name="emoji"
-          label="Icon"
+          label={tr("ui.icon")}
           options={ICON_KEYS}
           defaultValue={defaults?.emoji ?? DEFAULT_CHORE_ICON}
         />
         <Field
-          label="Points"
+          label={tr("ui.points")}
           name="points"
           type="text"
           inputMode="numeric"
@@ -142,7 +158,7 @@ export function ChoreEditor({
         />
         <div className={form.field}>
           <label htmlFor={categoryId} className={form.label}>
-            Category
+            {tr("ui.category")}
           </label>
           {categories.length > 0 ? (
             <select
@@ -153,23 +169,23 @@ export function ChoreEditor({
             >
               {categories.map((c) => (
                 <option key={c.id} value={c.id}>
-                  {c.name}
+                  <bdi>{c.name}</bdi>
                 </option>
               ))}
             </select>
           ) : (
             <p className={styles.muted}>
-              No categories yet.{" "}
-              <Link href="/manage/categories">Add one first</Link>.
+              {tr("ui.no.categories.yet")}{" "}
+              <Link href="/manage/categories">{tr("ui.add.one.first")}</Link>.
             </p>
           )}
         </div>
       </section>
 
       <section className={styles.section}>
-        <h2 className={styles.sectionTitle}>Who &amp; when</h2>
+        <h2 className={styles.sectionTitle}>{tr("ui.who.when")}</h2>
         <fieldset className={styles.choice}>
-          <legend className={form.label}>Who&rsquo;s it for?</legend>
+          <legend className={form.label}>{tr("ui.who.s.it.for")}</legend>
           {ASSIGN_OPTIONS.map((o) => (
             <label key={o.value} className={styles.radioRow}>
               <input
@@ -189,11 +205,13 @@ export function ChoreEditor({
         {assignment !== "everyone" ? (
           <fieldset className={styles.kids}>
             <legend className={form.label}>
-              {assignment === "rotating" ? "Who takes turns?" : "Which kids?"}
+              {assignment === "rotating"
+                ? tr("ui.who.takes.turns")
+                : tr("ui.which.kids")}
             </legend>
             {kids.length === 0 ? (
               <p className={styles.muted}>
-                Add kids first to assign this chore.
+                {tr("ui.add.kids.first.to.assign.this.chore")}
               </p>
             ) : (
               kids.map((k) => (
@@ -211,7 +229,7 @@ export function ChoreEditor({
                   >
                     <IconByName name={k.avatar} size={18} />
                   </span>
-                  {k.name}
+                  <bdi>{k.name}</bdi>
                 </label>
               ))
             )}
@@ -225,21 +243,21 @@ export function ChoreEditor({
             checked={core && !shared}
             disabled={shared}
             onChange={(e) => setCore(e.target.checked)}
-            aria-label="Core chore"
+            aria-label={tr("ui.core.chore")}
           />
-          <span className={styles.radioLabel}>Core chore</span>
+          <span className={styles.radioLabel}>{tr("ui.core.chore")}</span>
           <span className={styles.radioHint}>
             {shared
-              ? "Not available for shared chores"
-              : "Expected every day — counts toward challenges"}
+              ? tr("ui.not.available.for.shared.chores")
+              : tr("ui.expected.every.day.counts.toward.challenges")}
           </span>
         </label>
       </section>
 
       <section className={styles.section}>
-        <h2 className={styles.sectionTitle}>Checklist (optional)</h2>
+        <h2 className={styles.sectionTitle}>{tr("ui.checklist.optional")}</h2>
         <p className={styles.muted}>
-          Steps a kid ticks off — they must complete them all to log the chore.
+          {tr("ui.steps.a.kid.ticks.off.they.must.complete.them")}
         </p>
         {subtasks.map((step, i) => (
           <div key={i} className={styles.subtaskRow}>
@@ -247,8 +265,8 @@ export function ChoreEditor({
               className={styles.subtaskInput}
               name="subtasks"
               value={step}
-              placeholder={`Step ${i + 1}`}
-              aria-label={`Step ${i + 1}`}
+              placeholder={tr("ui.step.name", { p0: i + 1 })}
+              aria-label={tr("ui.step.name.85", { p0: i + 1 })}
               onChange={(e) =>
                 setSubtasks((prev) =>
                   prev.map((v, j) => (j === i ? e.target.value : v)),
@@ -258,7 +276,7 @@ export function ChoreEditor({
             <button
               type="button"
               className={styles.subtaskRemove}
-              aria-label={`Remove step ${i + 1}`}
+              aria-label={tr("ui.remove.step.name", { p0: i + 1 })}
               onClick={() =>
                 setSubtasks((prev) => prev.filter((_, j) => j !== i))
               }
@@ -273,15 +291,15 @@ export function ChoreEditor({
           onClick={() => setSubtasks((prev) => [...prev, ""])}
         >
           <Plus size={16} aria-hidden="true" />
-          Add a step
+          {tr("ui.add.a.step")}
         </button>
       </section>
 
       <section className={styles.section}>
-        <h2 className={styles.sectionTitle}>Limits</h2>
+        <h2 className={styles.sectionTitle}>{tr("ui.limits")}</h2>
         <div className={form.field}>
           <label htmlFor={periodId} className={form.label}>
-            How often can it be claimed?
+            {tr("ui.how.often.can.it.be.claimed")}
           </label>
           <select
             id={periodId}
@@ -290,9 +308,9 @@ export function ChoreEditor({
             onChange={(e) => setPeriod(e.target.value as LimitPeriod)}
             className={styles.select}
           >
-            <option value="none">Unlimited</option>
-            <option value="day">A set number per day</option>
-            <option value="week">A set number per week</option>
+            <option value="none">{tr("ui.unlimited")}</option>
+            <option value="day">{tr("ui.a.set.number.per.day")}</option>
+            <option value="week">{tr("ui.a.set.number.per.week")}</option>
           </select>
         </div>
 
@@ -302,7 +320,11 @@ export function ChoreEditor({
           <>
             <div className={styles.limitCount}>
               <Field
-                label={period === "day" ? "Times per day" : "Times per week"}
+                label={
+                  period === "day"
+                    ? tr("ui.times.per.day")
+                    : tr("ui.times.per.week")
+                }
                 name="limitCount"
                 type="text"
                 inputMode="numeric"
@@ -315,17 +337,19 @@ export function ChoreEditor({
             </div>
 
             <fieldset className={styles.choice}>
-              <legend className={form.label}>Who shares this limit?</legend>
+              <legend className={form.label}>
+                {tr("ui.who.shares.this.limit")}
+              </legend>
               {[
                 {
                   value: "per_kid" as const,
-                  label: "Each kid",
-                  hint: "Every kid can claim it this many times",
+                  label: tr("ui.each.kid"),
+                  hint: tr("ui.every.kid.can.claim.it.this.many.times"),
                 },
                 {
                   value: "total" as const,
-                  label: "Shared by everyone",
-                  hint: "First come, first served — once it's claimed this many times, it's gone for all",
+                  label: tr("ui.shared.by.everyone"),
+                  hint: tr("ui.first.come.first.served.once.it.s.claimed.this"),
                 },
               ].map((o) => (
                 <label key={o.value} className={styles.radioRow}>
@@ -348,7 +372,7 @@ export function ChoreEditor({
 
             <p className={styles.preview}>
               <Eye size={16} aria-hidden="true" />
-              <span>{limitPreview(period, count, scope)}</span>
+              <span>{limitPreview(period, count, scope, tr)}</span>
             </p>
           </>
         )}
@@ -363,9 +387,9 @@ export function ChoreEditor({
       />
 
       <section className={styles.section}>
-        <h2 className={styles.sectionTitle}>Description</h2>
+        <h2 className={styles.sectionTitle}>{tr("ui.description")}</h2>
         <Field
-          label="Description (optional)"
+          label={tr("ui.description.optional")}
           name="description"
           defaultValue={defaults?.description ?? ""}
           maxLength={280}
@@ -377,10 +401,10 @@ export function ChoreEditor({
       {state.error ? <p className={form.formError}>{state.error}</p> : null}
       <div className={styles.actions}>
         <Link href="/manage/chores" className={styles.cancel}>
-          Cancel
+          {tr("ui.cancel")}
         </Link>
         <button type="submit" className={form.submit} disabled={pending}>
-          {pending ? "Saving…" : "Save chore"}
+          {pending ? tr("ui.saving") : tr("ui.save.chore")}
         </button>
       </div>
     </form>

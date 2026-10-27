@@ -31,7 +31,7 @@ export async function setMyPinAction(
   const session = await requireParent();
   const pin = pinSchema.safeParse(formData.get("pin"));
   if (!pin.success)
-    return { fieldErrors: { pin: pin.error.issues[0].message } };
+    return { fieldErrorCodes: { pin: { key: "errors.pinRequired" } } };
 
   await setPin(getDb(), session.familyId, session.personId, pin.data);
   revalidatePath("/dashboard");
@@ -49,7 +49,7 @@ export async function addKidAction(
     color: formData.get("color"),
     pin: formData.get("pin"),
   });
-  if (!parsed.success) return { fieldErrors: toFieldErrors(parsed.error) };
+  if (!parsed.success) return { fieldErrorCodes: toFieldErrors(parsed.error) };
 
   await addKid(getDb(), session.familyId, parsed.data);
   revalidatePath(MANAGE_PATH);
@@ -68,8 +68,8 @@ export async function updateKidAction(
     avatar: formData.get("avatar"),
     color: formData.get("color"),
   });
-  if (!id.success) return { error: "Could not find that child." };
-  if (!parsed.success) return { fieldErrors: toFieldErrors(parsed.error) };
+  if (!id.success) return { errorCode: { key: "errors.childMissing" } };
+  if (!parsed.success) return { fieldErrorCodes: toFieldErrors(parsed.error) };
 
   await updateKid(getDb(), session.familyId, id.data, parsed.data);
   revalidatePath(MANAGE_PATH);
@@ -83,9 +83,9 @@ export async function setKidPinAction(
   const session = await requireParent();
   const id = idSchema.safeParse(formData.get("kidId"));
   const pin = pinSchema.safeParse(formData.get("pin"));
-  if (!id.success) return { error: "Could not find that child." };
+  if (!id.success) return { errorCode: { key: "errors.childMissing" } };
   if (!pin.success)
-    return { fieldErrors: { pin: pin.error.issues[0].message } };
+    return { fieldErrorCodes: { pin: { key: "errors.pinRequired" } } };
 
   await setPin(getDb(), session.familyId, id.data, pin.data);
   revalidatePath(MANAGE_PATH);
@@ -112,16 +112,20 @@ export async function deleteKidAction(
 ): Promise<FormState> {
   const session = await requireParent();
   const id = idSchema.safeParse(formData.get("kidId"));
-  if (!id.success) return { error: "Could not find that child." };
+  if (!id.success) return { errorCode: { key: "errors.childMissing" } };
 
   const db = getDb();
   const kid = await getPersonById(db, session.familyId, id.data);
   if (!kid || kid.role !== "kid") {
-    return { error: "Could not find that child." };
+    return { errorCode: { key: "errors.childMissing" } };
   }
   const confirm = (formData.get("confirm") ?? "").toString().trim();
   if (confirm !== kid.name) {
-    return { fieldErrors: { confirm: `Type "${kid.name}" to confirm.` } };
+    return {
+      fieldErrorCodes: {
+        confirm: { key: "errors.confirm", params: { name: kid.name } },
+      },
+    };
   }
 
   await deleteKid(db, session.familyId, id.data);

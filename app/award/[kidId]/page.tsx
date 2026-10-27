@@ -1,6 +1,9 @@
+import { getRequestLocale } from "@/lib/i18n/server";
+import { translate, type Translator } from "@/lib/i18n";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth/session";
+import { getFamilyTimezone } from "@/lib/family/settings";
 import { getDb } from "@/lib/db/client";
 import { getPersonById } from "@/lib/db/queries";
 import { listChores } from "@/lib/catalog/service";
@@ -18,7 +21,10 @@ import { AwardNav } from "@/components/manage/AwardNav";
 import manage from "@/components/manage/manage.module.css";
 import styles from "@/components/points/points.module.css";
 
-export const metadata: Metadata = { title: "Award points" };
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getRequestLocale();
+  return { title: translate(locale, "meta.app.award.kidId.page.tsx.title") };
+}
 
 export default async function AwardPage({
   params,
@@ -27,6 +33,9 @@ export default async function AwardPage({
   params: Promise<{ kidId: string }>;
   searchParams: Promise<{ mode?: string }>;
 }) {
+  const locale = await getRequestLocale();
+  const tr = translate.bind(null, locale) as Translator;
+
   const { kidId } = await params;
   const { mode } = await searchParams;
   const initialMode = mode === "deduct" ? "deduct" : "award";
@@ -35,6 +44,7 @@ export default async function AwardPage({
   if (session.role !== "parent") redirect("/me");
 
   const db = getDb();
+  const timezone = await getFamilyTimezone(db, session.familyId);
   const kid = await getPersonById(db, session.familyId, kidId);
   if (!kid || kid.role !== "kid") redirect("/dashboard");
 
@@ -77,9 +87,14 @@ export default async function AwardPage({
           <IconByName name={kid.avatar} size={28} />
         </span>
         <span className={styles.who}>
-          <span className={styles.kidName}>{kid.name}</span>
-          <span className={balance < 0 ? styles.balanceNeg : styles.balance}>
-            {balance} pts
+          <span className={styles.kidName}>
+            <bdi>{kid.name}</bdi>
+          </span>
+          <span
+            dir="ltr"
+            className={balance < 0 ? styles.balanceNeg : styles.balance}
+          >
+            {tr("flow.pts", { count: balance })}
           </span>
         </span>
       </div>
@@ -100,9 +115,10 @@ export default async function AwardPage({
 
       <section aria-labelledby="recent-title">
         <h2 id="recent-title" className={styles.sectionTitle}>
-          Recent activity
+          {tr("ui.recent.activity")}
         </h2>
         <ActivityList
+          timezone={timezone}
           entries={activity.map((e) => ({
             id: e.id,
             amount: e.amount,

@@ -1,4 +1,6 @@
 "use client";
+import { translateFormState } from "@/lib/i18n/errors";
+import { useTranslations } from "@/components/i18n/LocaleProvider";
 
 import { useActionState, useId, useState } from "react";
 import { Field } from "@/components/auth/Field";
@@ -35,43 +37,6 @@ export interface ChallengeDefaults {
   kidIds?: string[];
 }
 
-const SCOPE_OPTIONS: { value: ChallengeScope; label: string; hint: string }[] =
-  [
-    {
-      value: "kid",
-      label: "Each kid",
-      hint: "Everyone works toward it on their own",
-    },
-    { value: "family", label: "Whole family", hint: "You all share one tally" },
-  ];
-
-const GOALS: {
-  value: ChallengeGoal;
-  label: string;
-  targetLabel: string;
-}[] = [
-  { value: "points", label: "Earn points", targetLabel: "Points to earn" },
-  { value: "chore_count", label: "Log chores", targetLabel: "Chores to log" },
-  {
-    value: "core_days",
-    label: "Core-chore days",
-    targetLabel: "Days with all core chores done",
-  },
-];
-
-const RECUR_OPTIONS: {
-  value: ChallengeRecurrence;
-  label: string;
-  hint: string;
-}[] = [
-  { value: "none", label: "One-off", hint: "Runs once over these dates" },
-  {
-    value: "weekly",
-    label: "Every week",
-    hint: "Resets each week — earn the bonus again",
-  },
-];
-
 const initialState: FormState = {};
 
 export function ChallengeEditor({
@@ -81,10 +46,66 @@ export function ChallengeEditor({
   kids: EditorKid[];
   defaults?: ChallengeDefaults;
 }) {
-  const [state, action, pending] = useActionState(
+  const tr = useTranslations();
+  const SCOPE_OPTIONS: {
+    value: ChallengeScope;
+    label: string;
+    hint: string;
+  }[] = [
+    {
+      value: "kid",
+      label: tr("ui.each.kid"),
+      hint: tr("ui.everyone.works.toward.it.on.their.own"),
+    },
+    {
+      value: "family",
+      label: tr("ui.whole.family"),
+      hint: tr("ui.you.all.share.one.tally"),
+    },
+  ];
+  const GOALS: {
+    value: ChallengeGoal;
+    label: string;
+    targetLabel: string;
+  }[] = [
+    {
+      value: "points",
+      label: tr("ui.earn.points"),
+      targetLabel: tr("ui.points.to.earn"),
+    },
+    {
+      value: "chore_count",
+      label: tr("ui.log.chores"),
+      targetLabel: tr("ui.chores.to.log"),
+    },
+    {
+      value: "core_days",
+      label: tr("ui.core.chore.days"),
+      targetLabel: tr("ui.days.with.all.core.chores.done"),
+    },
+  ];
+  const RECUR_OPTIONS: {
+    value: ChallengeRecurrence;
+    label: string;
+    hint: string;
+  }[] = [
+    {
+      value: "none",
+      label: tr("ui.one.off"),
+      hint: tr("ui.runs.once.over.these.dates"),
+    },
+    {
+      value: "weekly",
+      label: tr("ui.every.week"),
+      hint: tr("ui.resets.each.week.earn.the.bonus.again"),
+    },
+  ];
+
+  const [stateCodes, action, pending] = useActionState(
     saveChallengeAction,
     initialState,
   );
+  const state = translateFormState(stateCodes, tr);
   const errors = state.fieldErrors;
   const [scope, setScope] = useState<ChallengeScope>(defaults?.scope ?? "kid");
   const [recurrence, setRecurrence] = useState<ChallengeRecurrence>(
@@ -96,7 +117,7 @@ export function ChallengeEditor({
   const goalId = useId();
   const selected = new Set(defaults?.kidIds ?? []);
   const targetLabel =
-    GOALS.find((g) => g.value === goalType)?.targetLabel ?? "Target";
+    GOALS.find((g) => g.value === goalType)?.targetLabel ?? tr("ui.target");
 
   return (
     <form action={action} className={form.form} noValidate>
@@ -105,28 +126,28 @@ export function ChallengeEditor({
       ) : null}
 
       <section className={styles.section}>
-        <h2 className={styles.sectionTitle}>Basics</h2>
+        <h2 className={styles.sectionTitle}>{tr("ui.basics")}</h2>
         <Field
-          label="Name"
+          label={tr("ui.name")}
           name="title"
           defaultValue={defaults?.title}
           error={errors?.title}
-          placeholder="e.g. Super Saver Week"
+          placeholder={tr("ui.e.g.super.saver.week")}
           required
         />
         <Field
-          label="Description"
+          label={tr("ui.description")}
           name="description"
           defaultValue={defaults?.description ?? undefined}
           error={errors?.description}
-          placeholder="Optional — a line of encouragement"
+          placeholder={tr("ui.optional.a.line.of.encouragement")}
         />
       </section>
 
       <section className={styles.section}>
-        <h2 className={styles.sectionTitle}>The goal</h2>
+        <h2 className={styles.sectionTitle}>{tr("ui.the.goal")}</h2>
         <fieldset className={styles.choice}>
-          <legend className={form.label}>Who&rsquo;s it for?</legend>
+          <legend className={form.label}>{tr("ui.who.s.it.for")}</legend>
           {SCOPE_OPTIONS.map((o) => (
             <label key={o.value} className={styles.radioRow}>
               <input
@@ -145,7 +166,7 @@ export function ChallengeEditor({
 
         <div className={form.field}>
           <label htmlFor={goalId} className={form.label}>
-            Measure
+            {tr("ui.measure")}
           </label>
           <select
             id={goalId}
@@ -173,7 +194,7 @@ export function ChallengeEditor({
           required
         />
         <Field
-          label="Bonus points when completed"
+          label={tr("ui.bonus.points.when.completed")}
           name="bonusPoints"
           type="number"
           inputMode="numeric"
@@ -182,7 +203,7 @@ export function ChallengeEditor({
           error={errors?.bonusPoints}
           hint={
             scope === "family"
-              ? "Each kid gets the full bonus when the family hits the goal."
+              ? tr("ui.each.kid.gets.the.full.bonus.when.the.family")
               : undefined
           }
           required
@@ -192,18 +213,18 @@ export function ChallengeEditor({
             type="checkbox"
             name="needsApproval"
             defaultChecked={defaults?.autoAward === false}
-            aria-label="Hold the bonus until I approve it"
+            aria-label={tr("ui.hold.the.bonus.until.i.approve.it")}
           />
           <span className={styles.radioLabel}>
-            Hold the bonus until I approve it
+            {tr("ui.hold.the.bonus.until.i.approve.it")}
           </span>
         </label>
       </section>
 
       <section className={styles.section}>
-        <h2 className={styles.sectionTitle}>When</h2>
+        <h2 className={styles.sectionTitle}>{tr("ui.when")}</h2>
         <fieldset className={styles.choice}>
-          <legend className={form.label}>Repeat</legend>
+          <legend className={form.label}>{tr("ui.repeat")}</legend>
           {RECUR_OPTIONS.map((o) => (
             <label key={o.value} className={styles.radioRow}>
               <input
@@ -220,7 +241,7 @@ export function ChallengeEditor({
           ))}
         </fieldset>
         <Field
-          label="Starts"
+          label={tr("ui.starts")}
           name="startsOn"
           type="date"
           defaultValue={defaults?.startsOn}
@@ -229,16 +250,16 @@ export function ChallengeEditor({
         />
         {recurrence === "weekly" ? (
           <Field
-            label="Ends (optional)"
+            label={tr("ui.ends.optional")}
             name="endsOn"
             type="date"
             defaultValue={defaults?.endsOn ?? undefined}
             error={errors?.endsOn}
-            hint="Leave blank to repeat every week until you pause it."
+            hint={tr("ui.leave.blank.to.repeat.every.week.until.you.pause")}
           />
         ) : (
           <Field
-            label="Ends"
+            label={tr("ui.ends")}
             name="endsOn"
             type="date"
             defaultValue={defaults?.endsOn ?? undefined}
@@ -249,13 +270,15 @@ export function ChallengeEditor({
       </section>
 
       <section className={styles.section}>
-        <h2 className={styles.sectionTitle}>Who&rsquo;s in it?</h2>
+        <h2 className={styles.sectionTitle}>{tr("ui.who.s.in.it")}</h2>
         <fieldset className={styles.kids}>
           <legend className={form.label}>
-            Tick the kids — or leave empty for the whole family.
+            {tr("ui.tick.the.kids.or.leave.empty.for.the.whole")}
           </legend>
           {kids.length === 0 ? (
-            <p className={styles.muted}>Add kids first to run a challenge.</p>
+            <p className={styles.muted}>
+              {tr("ui.add.kids.first.to.run.a.challenge")}
+            </p>
           ) : (
             kids.map((k) => (
               <label key={k.id} className={styles.kidRow}>
@@ -272,7 +295,9 @@ export function ChallengeEditor({
                 >
                   <IconByName name={k.avatar} size={18} />
                 </span>
-                <span>{k.name}</span>
+                <span>
+                  <bdi>{k.name}</bdi>
+                </span>
               </label>
             ))
           )}
@@ -286,7 +311,7 @@ export function ChallengeEditor({
       ) : null}
 
       <button type="submit" className={form.submit} disabled={pending}>
-        {pending ? "Saving…" : "Save challenge"}
+        {pending ? tr("ui.saving") : tr("ui.save.challenge")}
       </button>
     </form>
   );

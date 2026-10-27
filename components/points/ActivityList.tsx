@@ -1,3 +1,6 @@
+"use client";
+import { useTranslations, useLocale } from "@/components/i18n/LocaleProvider";
+import { intlLocale, formatNumber } from "@/lib/i18n";
 import { PutBackButton } from "./PutBackButton";
 import styles from "./points.module.css";
 
@@ -12,10 +15,6 @@ export interface ActivityRow {
   reversed?: boolean;
 }
 
-function formatDate(d: Date): string {
-  return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-}
-
 /**
  * Presentational ledger feed. `showKid` includes the kid's name in the meta.
  * `undoKidName` (parent surfaces only) adds a "put back" button to earned
@@ -25,13 +24,18 @@ export function ActivityList({
   entries,
   showKid = false,
   undoKidName,
+  timezone,
 }: {
   entries: ActivityRow[];
   showKid?: boolean;
   undoKidName?: string;
+  timezone: string;
 }) {
+  const tr = useTranslations();
+  const locale = useLocale();
+
   if (entries.length === 0) {
-    return <p className={styles.empty}>No activity yet.</p>;
+    return <p className={styles.empty}>{tr("ui.no.activity.yet")}</p>;
   }
   return (
     <ul className={styles.activity}>
@@ -45,15 +49,20 @@ export function ActivityList({
                   : styles.activityReason
               }
             >
-              {e.reason}
+              <bdi>{e.reason}</bdi>
             </span>
             <span className={styles.activityMeta}>
-              {e.reversed ? "Put back · " : ""}
+              {e.reversed ? tr("ui.put.back") : ""}
               {showKid && e.kidName ? `${e.kidName} · ` : ""}
-              {formatDate(e.createdAt)}
+              {new Intl.DateTimeFormat(intlLocale(locale), {
+                timeZone: timezone,
+                month: "short",
+                day: "numeric",
+              }).format(e.createdAt)}
             </span>
           </span>
           <span
+            dir="ltr"
             className={
               e.reversed
                 ? styles.amountReversed
@@ -63,7 +72,7 @@ export function ActivityList({
             }
           >
             {e.amount >= 0 ? "+" : ""}
-            {e.amount}
+            {formatNumber(locale, e.amount)}
           </span>
           {undoKidName ? (
             e.type === "earn" && !e.reversed ? (

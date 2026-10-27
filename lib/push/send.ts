@@ -2,6 +2,7 @@ import "server-only";
 import webpush from "web-push";
 import { env } from "@/lib/env";
 import type { Database } from "@/lib/db/types";
+import { formatPushMessage, type PushMessage } from "./messages";
 import {
   deleteSubscriptionByEndpoint,
   listSubscriptionsForParents,
@@ -37,11 +38,13 @@ function ensureConfigured(): boolean {
   return true;
 }
 
-export interface PushPayload {
+interface LegacyPushPayload {
   title: string;
   body: string;
   url?: string;
 }
+/** Existing events remain compatible until all callers use semantic messages. */
+export type PushPayload = PushMessage | LegacyPushPayload;
 
 async function sendToSubscriptions(
   db: Database,
@@ -49,11 +52,13 @@ async function sendToSubscriptions(
   payload: PushPayload,
 ): Promise<void> {
   if (subs.length === 0 || !ensureConfigured()) return;
-  const data = JSON.stringify(payload);
 
   await Promise.allSettled(
     subs.map(async (s) => {
       try {
+        const data = JSON.stringify(
+          "kind" in payload ? formatPushMessage(s.locale, payload) : payload,
+        );
         await webpush.sendNotification(
           { endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } },
           data,

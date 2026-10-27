@@ -79,7 +79,7 @@
 .close {
   position: absolute;
   top: var(--space-3);
-  right: var(--space-3);
+  inset-inline-end: var(--space-3);
   display: grid;
   place-items: center;
   width: var(--tap-target);

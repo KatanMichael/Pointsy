@@ -1,4 +1,5 @@
 "use client";
+import { useTranslations } from "@/components/i18n/LocaleProvider";
 
 import { useEffect, useState } from "react";
 import { setFamilyTimezoneAction } from "@/app/actions/family";
@@ -66,6 +67,8 @@ const TIMEZONES = [
 ];
 
 export function FamilyTimezone({ current }: { current: string }) {
+  const tr = useTranslations();
+
   const [tz, setTz] = useState(current);
   const [saved, setSaved] = useState(false);
 
@@ -94,7 +97,7 @@ export function FamilyTimezone({ current }: { current: string }) {
     <div className={styles.tz}>
       <select
         id="family-tz"
-        aria-label="Family time zone"
+        aria-label={tr("ui.family.time.zone")}
         value={tz}
         onChange={(e) => void onChange(e.target.value)}
         className={styles.tzSelect}
@@ -107,8 +110,8 @@ export function FamilyTimezone({ current }: { current: string }) {
       </select>
       <p className={styles.tzHint} aria-live="polite">
         {saved
-          ? "Saved."
-          : "Daily and weekly chore limits reset at your local midnight."}
+          ? tr("ui.saved")
+          : tr("ui.daily.and.weekly.chore.limits.reset.at.your.local")}
       </p>
     </div>
   );

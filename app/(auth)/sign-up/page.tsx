@@ -1,30 +1,41 @@
+import { getRequestLocale } from "@/lib/i18n/server";
+import { translate, type Translator } from "@/lib/i18n";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { SignUpForm } from "@/components/auth/SignUpForm";
 import styles from "../auth.module.css";
 
-export const metadata: Metadata = {
-  title: "Create your family",
-  description:
-    "Set up Pointsy for your household in under a minute — it's free, with no ads. Reward chores and good habits with points kids can redeem.",
-  alternates: { canonical: "/sign-up" },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getRequestLocale();
+  return {
+    title: translate(locale, "meta.app.auth.sign.up.page.tsx.title"),
+    description: translate(
+      locale,
+      "meta.app.auth.sign.up.page.tsx.description",
+    ),
+    alternates: { canonical: "/sign-up" },
+  };
+}
 
-export default function SignUpPage() {
+export default async function SignUpPage() {
+  const locale = await getRequestLocale();
+  const tr = translate.bind(null, locale) as Translator;
+
   return (
     <main id="main" className={styles.main}>
       <section className={styles.card} aria-labelledby="signup-title">
         <div className={styles.intro}>
           <h1 id="signup-title" className={styles.title}>
-            Create your family
+            {tr("ui.create.your.family")}
           </h1>
           <p className={styles.subtitle}>
-            Set up Pointsy in under a minute — it’s free, forever.
+            {tr("ui.set.up.pointsy.in.under.a.minute.it.s")}
           </p>
         </div>
         <SignUpForm />
         <p className={styles.alt}>
-          Already have an account? <Link href="/sign-in">Sign in</Link>
+          {tr("ui.already.have.an.account")}{" "}
+          <Link href="/sign-in">{tr("ui.sign.in")}</Link>
         </p>
       </section>
     </main>

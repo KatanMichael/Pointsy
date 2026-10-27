@@ -1,4 +1,5 @@
 "use client";
+import { useTranslations } from "@/components/i18n/LocaleProvider";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -19,14 +20,16 @@ export interface BottomNavItem {
  */
 export function BottomNav({
   items,
-  label = "Sections",
+  label,
 }: {
   items: readonly BottomNavItem[];
   label?: string;
 }) {
+  const tr = useTranslations();
+
   const pathname = usePathname();
   return (
-    <nav className={styles.bar} aria-label={label}>
+    <nav className={styles.bar} aria-label={label ?? tr("ui.sections")}>
       <div className={styles.barInner}>
         {items.map(({ href, label, Icon, accent }) => {
           const active = pathname === href;

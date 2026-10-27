@@ -14,6 +14,7 @@
 /* The dots are an <svg> of <circle>s (see PinPad) — bulletproof on real iOS,
    where empty CSS-sized HTML elements could collapse to nothing. */
 .dots {
+  direction: ltr;
   display: block;
   width: 8rem;
   height: auto;
@@ -77,6 +78,7 @@
 }
 
 .keys {
+  direction: ltr;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: var(--space-3);

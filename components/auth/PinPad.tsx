@@ -1,4 +1,5 @@
 "use client";
+import { useTranslations } from "@/components/i18n/LocaleProvider";
 
 import { useEffect, useRef, useState } from "react";
 import { Delete } from "lucide-react";
@@ -21,7 +22,7 @@ const ERROR_FLASH_MS = 450;
 export function PinPad({
   length = 4,
   name = "pin",
-  label = "Enter your PIN",
+  label,
   autoSubmit = false,
   disabled = false,
   errorNonce = 0,
@@ -33,6 +34,8 @@ export function PinPad({
   disabled?: boolean;
   errorNonce?: number;
 }) {
+  const tr = useTranslations();
+
   const [pin, setPin] = useState("");
   const [clearedNonce, setClearedNonce] = useState(0);
   const padRef = useRef<HTMLDivElement>(null);
@@ -79,8 +82,13 @@ export function PinPad({
 
   return (
     <div ref={padRef} className={styles.pad}>
-      <input ref={hiddenRef} type="hidden" name={name} />
-      <p className={styles.label}>{label}</p>
+      <input
+        ref={hiddenRef}
+        type="hidden"
+        name={name}
+        data-draft-initial-value=""
+      />
+      <p className={styles.label}>{label ?? tr("ui.enter.your.pin")}</p>
       {/* SVG circles, not styled HTML elements — they render identically on
           every device (empty CSS-sized <span>s could collapse to nothing on
           real iOS). */}
@@ -106,7 +114,7 @@ export function PinPad({
         ))}
       </svg>
       <output className="sr-only">
-        {pin.length} of {length} digits entered
+        {tr("flow.pinProgress", { done: pin.length, total: length })}
       </output>
       <div className={styles.keys}>
         {KEYS.map((k) => (
@@ -134,7 +142,7 @@ export function PinPad({
           className={styles.keyAux}
           onClick={backspace}
           disabled={disabled || errored || pin.length === 0}
-          aria-label="Delete last digit"
+          aria-label={tr("ui.delete.last.digit")}
         >
           <Delete size={22} aria-hidden="true" />
         </button>

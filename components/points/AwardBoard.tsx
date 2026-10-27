@@ -1,4 +1,7 @@
 "use client";
+import { formatNumber } from "@/lib/i18n";
+
+import { useTranslations, useLocale } from "@/components/i18n/LocaleProvider";
 
 import { useMemo, useState } from "react";
 import { Search, Star, Users } from "lucide-react";
@@ -40,6 +43,9 @@ export function AwardBoard({
   mostUsedIds: string[];
   alsoIds: string[];
 }) {
+  const locale = useLocale();
+  const tr = useTranslations();
+
   const [query, setQuery] = useState("");
 
   const recipients = useMemo(() => [kidId, ...alsoIds], [kidId, alsoIds]);
@@ -57,7 +63,12 @@ export function AwardBoard({
   const favourites = chores.filter((c) => c.pinned);
 
   function card(c: AwardChore) {
-    const limit = formatChoreLimit(c.limitPeriod, c.limitCount);
+    const limit = formatChoreLimit(
+      c.limitPeriod,
+      c.limitCount,
+      undefined,
+      locale,
+    );
     return (
       <form key={c.id} action={awardChoreAction} className={styles.choreForm}>
         <input type="hidden" name="choreId" value={c.id} />
@@ -68,17 +79,21 @@ export function AwardBoard({
           <span className={styles.choreIcon}>
             <IconByName name={c.emoji} size={24} />
           </span>
-          <span className={styles.choreName}>{c.name}</span>
+          <span className={styles.choreName}>
+            <bdi>{c.name}</bdi>
+          </span>
           {c.limitScope === "total" ? (
             <Chip variant="accent">
               <Users size={12} aria-hidden="true" />
-              Shared
+              {tr("ui.shared")}
             </Chip>
           ) : c.isCore ? (
-            <Chip variant="neutral">Core</Chip>
+            <Chip variant="neutral">{tr("ui.core")}</Chip>
           ) : null}
-          <span className={styles.chorePoints}>+{c.points}</span>
-          <span className={styles.choreBadge}>{limit ?? "Anytime"}</span>
+          <span className={styles.chorePoints}>
+            +{formatNumber(locale, c.points)}
+          </span>
+          <span className={styles.choreBadge}>{limit ?? tr("ui.anytime")}</span>
         </button>
       </form>
     );
@@ -91,8 +106,8 @@ export function AwardBoard({
         <input
           type="search"
           className={styles.search}
-          placeholder="Search chores…"
-          aria-label="Search chores"
+          placeholder={tr("ui.search.chores")}
+          aria-label={tr("ui.search.chores.218")}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />
@@ -102,20 +117,29 @@ export function AwardBoard({
         filtered.length > 0 ? (
           <div className={styles.choreGrid}>{filtered.map(card)}</div>
         ) : (
-          <p className={styles.empty}>No chores match “{query}”.</p>
+          <p className={styles.empty}>
+            {tr("ui.no.chores.match")}
+            {query}”.
+          </p>
         )
       ) : (
         <>
           {mostUsed.length > 0 && (
-            <section className={styles.group} aria-label="Most used chores">
-              <h3 className={styles.groupTitle}>Most used</h3>
+            <section
+              className={styles.group}
+              aria-label={tr("ui.most.used.chores")}
+            >
+              <h3 className={styles.groupTitle}>{tr("ui.most.used")}</h3>
               <div className={styles.choreGrid}>{mostUsed.map(card)}</div>
             </section>
           )}
           {favourites.length > 0 && (
-            <section className={styles.group} aria-label="Favourite chores">
+            <section
+              className={styles.group}
+              aria-label={tr("ui.favourite.chores")}
+            >
               <h3 className={styles.groupTitle}>
-                <Star size={16} aria-hidden="true" /> Favourites
+                <Star size={16} aria-hidden="true" /> {tr("ui.favourites")}
               </h3>
               <div className={styles.choreGrid}>{favourites.map(card)}</div>
             </section>
@@ -127,7 +151,7 @@ export function AwardBoard({
               <details key={cat.id} open className={styles.group}>
                 <summary className={styles.groupSummary}>
                   <IconByName name={cat.icon} size={16} />
-                  {cat.name}
+                  <bdi>{cat.name}</bdi>
                   <span className={styles.groupCount}>{items.length}</span>
                 </summary>
                 <div className={styles.choreGrid}>{items.map(card)}</div>

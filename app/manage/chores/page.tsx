@@ -1,3 +1,5 @@
+import { getRequestLocale } from "@/lib/i18n/server";
+import { translate, type Translator } from "@/lib/i18n";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import Link from "next/link";
@@ -18,9 +20,15 @@ import { ManageNav } from "@/components/manage/ManageNav";
 import type { Chore } from "@/lib/db/schema";
 import manage from "@/components/manage/manage.module.css";
 
-export const metadata: Metadata = { title: "Chores" };
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getRequestLocale();
+  return { title: translate(locale, "meta.app.manage.chores.page.tsx.title") };
+}
 
 export default async function ChoresPage() {
+  const locale = await getRequestLocale();
+  const tr = translate.bind(null, locale) as Translator;
+
   const session = await getSession();
   if (!session) redirect("/sign-in");
   if (session.role !== "parent") redirect("/me");
@@ -36,17 +44,17 @@ export default async function ChoresPage() {
     listCategories(db, session.familyId),
   ]);
   const nameById = new Map(kids.map((k) => [k.id, k.name]));
-  const nameOf = (id: string) => nameById.get(id) ?? "A kid";
+  const nameOf = (id: string) => nameById.get(id) ?? tr("ui.kids");
 
   function whoLabel(c: Chore): string | null {
     if (c.assignment === "everyone") return null;
     if (c.assignment === "rotating") {
       return c.currentTurnPersonId
-        ? `${nameOf(c.currentTurnPersonId)}'s turn`
-        : "Takes turns";
+        ? tr("domain.turn", { name: nameOf(c.currentTurnPersonId) })
+        : tr("ui.takes.turns");
     }
     const names = (assignees.get(c.id) ?? []).map(nameOf);
-    return names.length > 0 ? names.join(", ") : "No one yet";
+    return names.length > 0 ? names.join(", ") : tr("ui.no.one.yet");
   }
 
   const groups: ChoreGroup[] = groupByCategory(chores, categories).map(
@@ -73,10 +81,13 @@ export default async function ChoresPage() {
 
   return (
     <main id="main" className={manage.main}>
-      <ScreenHeader title="Chores" intro="Ways for kids to earn points.">
+      <ScreenHeader
+        title={tr("ui.chores")}
+        intro={tr("ui.ways.for.kids.to.earn.points")}
+      >
         <Link href="/manage/categories" className={manage.headerLink}>
           <Tags size={16} aria-hidden="true" />
-          Categories
+          {tr("ui.categories")}
         </Link>
       </ScreenHeader>
 
@@ -84,7 +95,7 @@ export default async function ChoresPage() {
         <ChoreCatalog groups={groups} />
       ) : (
         <p className={manage.empty}>
-          No chores yet — tap “Add a chore” to add your first.
+          {tr("ui.no.chores.yet.tap.add.a.chore.to.add")}
         </p>
       )}
 

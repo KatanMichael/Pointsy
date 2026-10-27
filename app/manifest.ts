@@ -4,8 +4,7 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "Pointsy",
     short_name: "Pointsy",
-    description:
-      "A simple, friendly way for families to earn and redeem points.",
+    description: "Family chores and rewards · משימות ופרסים לכל המשפחה",
     start_url: "/",
     scope: "/",
     display: "standalone",

@@ -1,4 +1,6 @@
 "use client";
+import { translateFormState } from "@/lib/i18n/errors";
+import { useTranslations } from "@/components/i18n/LocaleProvider";
 
 import { useActionState, useEffect, useRef } from "react";
 import { createCatalogItemAction } from "@/app/actions/catalog";
@@ -16,10 +18,13 @@ export function AddCatalogForm({
   kind: CatalogKind;
   kids?: { id: string; name: string }[];
 }) {
-  const [state, action, pending] = useActionState(
+  const tr = useTranslations();
+
+  const [stateCodes, action, pending] = useActionState(
     createCatalogItemAction,
     initialState,
   );
+  const state = translateFormState(stateCodes, tr);
   const formRef = useRef<HTMLFormElement>(null);
 
   useEffect(() => {
@@ -29,7 +34,9 @@ export function AddCatalogForm({
   return (
     <section
       className={styles.card}
-      aria-label={kind === "chore" ? "Add a chore" : "Add a reward"}
+      aria-label={
+        kind === "chore" ? tr("ui.add.a.chore") : tr("ui.add.a.reward")
+      }
     >
       <form ref={formRef} action={action} className={form.form} noValidate>
         <input type="hidden" name="kind" value={kind} />
@@ -40,7 +47,11 @@ export function AddCatalogForm({
           </p>
         ) : null}
         <button type="submit" className={form.submit} disabled={pending}>
-          {pending ? "Adding…" : kind === "chore" ? "Add chore" : "Add reward"}
+          {pending
+            ? tr("ui.adding")
+            : kind === "chore"
+              ? tr("ui.add.chore")
+              : tr("ui.add.reward")}
         </button>
       </form>
     </section>

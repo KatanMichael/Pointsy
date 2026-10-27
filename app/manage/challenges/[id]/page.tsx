@@ -1,3 +1,5 @@
+import { getRequestLocale } from "@/lib/i18n/server";
+import { translate, type Translator } from "@/lib/i18n";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth/session";
@@ -12,13 +14,21 @@ import { ScreenHeader } from "@/components/ui/ScreenHeader";
 import { ManageNav } from "@/components/manage/ManageNav";
 import manage from "@/components/manage/manage.module.css";
 
-export const metadata: Metadata = { title: "Edit challenge" };
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getRequestLocale();
+  return {
+    title: translate(locale, "meta.app.manage.challenges.id.page.tsx.title"),
+  };
+}
 
 export default async function EditChallengePage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
+  const locale = await getRequestLocale();
+  const tr = translate.bind(null, locale) as Translator;
+
   const { id } = await params;
   const session = await getSession();
   if (!session) redirect("/sign-in");
@@ -39,7 +49,7 @@ export default async function EditChallengePage({
 
   return (
     <main id="main" className={manage.main}>
-      <ScreenHeader title="Edit challenge" />
+      <ScreenHeader title={tr("ui.edit.challenge")} />
       <ChallengeEditor
         kids={kids.map((k) => ({
           id: k.id,

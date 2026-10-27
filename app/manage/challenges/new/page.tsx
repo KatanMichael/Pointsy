@@ -1,3 +1,5 @@
+import { getRequestLocale } from "@/lib/i18n/server";
+import { translate, type Translator } from "@/lib/i18n";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth/session";
@@ -10,9 +12,17 @@ import { ScreenHeader } from "@/components/ui/ScreenHeader";
 import { ManageNav } from "@/components/manage/ManageNav";
 import manage from "@/components/manage/manage.module.css";
 
-export const metadata: Metadata = { title: "Add a challenge" };
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getRequestLocale();
+  return {
+    title: translate(locale, "meta.app.manage.challenges.new.page.tsx.title"),
+  };
+}
 
 export default async function NewChallengePage() {
+  const locale = await getRequestLocale();
+  const tr = translate.bind(null, locale) as Translator;
+
   const session = await getSession();
   if (!session) redirect("/sign-in");
   if (session.role !== "parent") redirect("/me");
@@ -27,8 +37,8 @@ export default async function NewChallengePage() {
   return (
     <main id="main" className={manage.main}>
       <ScreenHeader
-        title="Add a challenge"
-        intro="A time-boxed goal that pays a bonus when it’s hit."
+        title={tr("ui.add.a.challenge")}
+        intro={tr("ui.a.time.boxed.goal.that.pays.a.bonus.when")}
       />
       <ChallengeEditor
         kids={kids.map((k) => ({

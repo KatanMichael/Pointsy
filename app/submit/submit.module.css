@@ -50,7 +50,7 @@
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
-  text-align: left;
+  text-align: start;
   cursor: pointer;
 }
 
@@ -310,7 +310,7 @@
 }
 
 .countdownValue {
-  margin-left: auto;
+  margin-inline-start: auto;
   font-weight: 800;
   font-size: 1rem;
   letter-spacing: 0.5px;

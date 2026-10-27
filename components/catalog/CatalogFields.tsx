@@ -1,4 +1,5 @@
 "use client";
+import { useTranslations } from "@/components/i18n/LocaleProvider";
 
 import { useId, useState } from "react";
 import { Field } from "@/components/auth/Field";
@@ -42,6 +43,8 @@ export function CatalogFields({
   kids,
   defaults,
 }: CatalogFieldsProps) {
+  const tr = useTranslations();
+
   const isChore = kind === "chore";
   const valueName = isChore ? "points" : "cost";
   // Unique per instance — the add form and every edit card render these fields,
@@ -59,7 +62,7 @@ export function CatalogFields({
   return (
     <>
       <Field
-        label="Name"
+        label={tr("ui.name")}
         name="name"
         defaultValue={defaults?.name}
         autoComplete="off"
@@ -68,7 +71,7 @@ export function CatalogFields({
       />
       <IconPicker
         name="emoji"
-        label="Icon"
+        label={tr("ui.icon")}
         options={isChore ? CHORE_ICON_KEYS : REWARD_ICON_KEYS}
         defaultValue={
           defaults?.emoji ??
@@ -76,7 +79,7 @@ export function CatalogFields({
         }
       />
       <Field
-        label={isChore ? "Points" : "Cost (points)"}
+        label={isChore ? tr("ui.points") : tr("ui.cost.points")}
         name={valueName}
         type="text"
         inputMode="numeric"
@@ -89,7 +92,7 @@ export function CatalogFields({
       {isChore ? (
         <div className={form.field}>
           <label htmlFor={periodId} className={form.label}>
-            How often can a kid claim this?
+            {tr("ui.how.often.can.a.kid.claim.this")}
           </label>
           <select
             id={periodId}
@@ -98,16 +101,20 @@ export function CatalogFields({
             onChange={(e) => setPeriod(e.target.value as LimitPeriod)}
             className={styles.select}
           >
-            <option value="none">Unlimited</option>
-            <option value="day">A set number per day</option>
-            <option value="week">A set number per week</option>
+            <option value="none">{tr("ui.unlimited")}</option>
+            <option value="day">{tr("ui.a.set.number.per.day")}</option>
+            <option value="week">{tr("ui.a.set.number.per.week")}</option>
           </select>
           {period === "none" ? (
             <input type="hidden" name="limitCount" value="1" />
           ) : (
             <div className={styles.limitCount}>
               <Field
-                label={period === "day" ? "Times per day" : "Times per week"}
+                label={
+                  period === "day"
+                    ? tr("ui.times.per.day")
+                    : tr("ui.times.per.week")
+                }
                 name="limitCount"
                 type="text"
                 inputMode="numeric"
@@ -124,7 +131,7 @@ export function CatalogFields({
       {!isChore && kids && kids.length > 0 ? (
         <div className={form.field}>
           <label htmlFor={forKidId} className={form.label}>
-            Who&rsquo;s it for?
+            {tr("ui.who.s.it.for")}
           </label>
           <select
             id={forKidId}
@@ -132,16 +139,16 @@ export function CatalogFields({
             defaultValue={defaults?.assignedToKidId ?? ""}
             className={styles.select}
           >
-            <option value="">Everyone</option>
+            <option value="">{tr("ui.everyone")}</option>
             {kids.map((k) => (
               <option key={k.id} value={k.id}>
-                Just for {k.name}
+                {tr("ui.just.for")}
+                <bdi>{k.name}</bdi>
               </option>
             ))}
           </select>
           <p className={form.hint}>
-            Pick a kid to make it their personal goal — only they see it, with a
-            progress tracker on their dashboard.
+            {tr("ui.pick.a.kid.to.make.it.their.personal.goal")}
           </p>
         </div>
       ) : null}
@@ -154,19 +161,19 @@ export function CatalogFields({
               name="isTeam"
               checked={isTeam}
               onChange={(e) => setIsTeam(e.target.checked)}
-              aria-label="Team reward"
+              aria-label={tr("ui.team.reward")}
             />
             <span>
-              <span className={styles.teamLabel}>Team reward</span>
+              <span className={styles.teamLabel}>{tr("ui.team.reward")}</span>
               <span className={styles.teamHint}>
-                Kids team up and chip in together
+                {tr("ui.kids.team.up.and.chip.in.together")}
               </span>
             </span>
           </label>
           {isTeam ? (
             <>
               <Field
-                label="Minimum kids"
+                label={tr("ui.minimum.kids")}
                 name="minKids"
                 type="text"
                 inputMode="numeric"
@@ -180,12 +187,14 @@ export function CatalogFields({
                   name="allowSolo"
                   checked={allowSolo}
                   onChange={(e) => setAllowSolo(e.target.checked)}
-                  aria-label="Also redeemable solo"
+                  aria-label={tr("ui.also.redeemable.solo")}
                 />
                 <span>
-                  <span className={styles.teamLabel}>Also redeemable solo</span>
+                  <span className={styles.teamLabel}>
+                    {tr("ui.also.redeemable.solo")}
+                  </span>
                   <span className={styles.teamHint}>
-                    A kid can also grab it alone at the full price
+                    {tr("ui.a.kid.can.also.grab.it.alone.at.the")}
                   </span>
                 </span>
               </label>
@@ -201,7 +210,7 @@ export function CatalogFields({
       ) : null}
 
       <Field
-        label="Description (optional)"
+        label={tr("ui.description.optional")}
         name="description"
         defaultValue={defaults?.description ?? ""}
         autoComplete="off"

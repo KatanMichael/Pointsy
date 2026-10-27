@@ -158,6 +158,8 @@ interface PushPayload {
   title?: string;
   body?: string;
   url?: string;
+  lang?: string;
+  dir?: "ltr" | "rtl";
 }
 
 self.addEventListener("push", (event) => {
@@ -171,6 +173,8 @@ self.addEventListener("push", (event) => {
   event.waitUntil(
     self.registration.showNotification(payload.title ?? "Pointsy", {
       body: payload.body ?? "",
+      lang: payload.lang === "he" ? "he" : "en",
+      dir: payload.dir === "rtl" ? "rtl" : "ltr",
       icon: "/icons/icon-192.png",
       badge: "/icons/icon-192.png",
       data: { url: payload.url ?? "/" },

@@ -1,3 +1,5 @@
+"use client";
+import { useTranslations } from "@/components/i18n/LocaleProvider";
 import styles from "./core.module.css";
 
 const R = 34;
@@ -16,6 +18,8 @@ export function CoreProgress({
   total: number;
   streak: number;
 }) {
+  const tr = useTranslations();
+
   const pct = total > 0 ? Math.min(1, done / total) : 0;
   const complete = total > 0 && done >= total;
 
@@ -36,28 +40,30 @@ export function CoreProgress({
             }}
           />
         </svg>
-        <span className={styles.count}>
+        <span dir="ltr" className={styles.count}>
           <span aria-hidden="true">
             {done}
             <span className={styles.den}>/{total}</span>
           </span>
           <span className="sr-only">
-            {done} of {total} must-do chores done today
+            {tr("flow.coreProgress", { done, total })}
           </span>
         </span>
       </div>
 
       <div className={styles.text}>
         <h2 id="core-heading" className={styles.title}>
-          {complete ? "All done today! 🎉" : "Today’s must-dos"}
+          {complete ? tr("ui.all.done.today") : tr("ui.today.s.must.dos")}
         </h2>
         <p className={styles.sub}>
           {complete
-            ? "You finished every must-do chore."
-            : `${total - done} still to do`}
+            ? tr("ui.you.finished.every.must.do.chore")
+            : tr("ui.name.still.to.do", { p0: total - done })}
         </p>
         {streak > 0 ? (
-          <p className={styles.streak}>🔥 {streak}-day streak</p>
+          <p className={styles.streak}>
+            🔥 {tr("flow.streak", { count: streak })}
+          </p>
         ) : null}
       </div>
     </section>

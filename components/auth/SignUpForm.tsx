@@ -1,4 +1,6 @@
 "use client";
+import { translateFormState } from "@/lib/i18n/errors";
+import { useTranslations } from "@/components/i18n/LocaleProvider";
 
 import { useActionState, useEffect, useRef } from "react";
 import Link from "next/link";
@@ -9,7 +11,13 @@ import styles from "./auth-form.module.css";
 const initialState: AuthState = {};
 
 export function SignUpForm() {
-  const [state, action, pending] = useActionState(signUpAction, initialState);
+  const tr = useTranslations();
+
+  const [stateCodes, action, pending] = useActionState(
+    signUpAction,
+    initialState,
+  );
+  const state = translateFormState(stateCodes, tr);
   const tzRef = useRef<HTMLInputElement>(null);
 
   // Capture the browser's timezone so chore limits reset at the family's local
@@ -24,21 +32,21 @@ export function SignUpForm() {
     <form action={action} className={styles.form} noValidate>
       <input ref={tzRef} type="hidden" name="timezone" defaultValue="" />
       <Field
-        label="Family name"
+        label={tr("ui.family.name")}
         name="familyName"
         autoComplete="off"
         error={state.fieldErrors?.familyName}
         required
       />
       <Field
-        label="Your name"
+        label={tr("ui.your.name")}
         name="parentName"
         autoComplete="name"
         error={state.fieldErrors?.parentName}
         required
       />
       <Field
-        label="Email"
+        label={tr("ui.email")}
         name="email"
         type="email"
         autoComplete="email"
@@ -47,11 +55,11 @@ export function SignUpForm() {
         required
       />
       <Field
-        label="Password"
+        label={tr("ui.password")}
         name="password"
         type="password"
         autoComplete="new-password"
-        hint="At least 8 characters."
+        hint={tr("ui.at.least.8.characters")}
         error={state.fieldErrors?.password}
         required
       />
@@ -69,10 +77,10 @@ export function SignUpForm() {
           htmlFor="consent"
           className={styles.consentLabel}
         >
-          I am a parent or guardian and agree to the{" "}
-          <Link href="/terms">Terms</Link> and{" "}
-          <Link href="/privacy">Privacy Policy</Link>, including managing my
-          children&rsquo;s profiles.
+          {tr("flow.consentStart")} <Link href="/terms">{tr("ui.terms")}</Link>
+          {tr("flow.and")}
+          <Link href="/privacy">{tr("ui.privacy.policy")}</Link>
+          {tr("flow.consentEnd")}
         </label>
       </div>
       {state.fieldErrors?.consent ? (
@@ -88,7 +96,7 @@ export function SignUpForm() {
       ) : null}
 
       <button type="submit" className={styles.submit} disabled={pending}>
-        {pending ? "Creating your family…" : "Create family"}
+        {pending ? tr("ui.creating.your.family") : tr("ui.create.family")}
       </button>
     </form>
   );

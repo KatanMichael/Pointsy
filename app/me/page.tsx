@@ -1,3 +1,6 @@
+import { formatNumber } from "@/lib/i18n";
+import { getRequestLocale } from "@/lib/i18n/server";
+import { translate, type Translator } from "@/lib/i18n";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import Link from "next/link";
@@ -40,9 +43,15 @@ import { CountUp } from "@/components/me/CountUp";
 import styles from "./me.module.css";
 import hype from "@/components/me/hype.module.css";
 
-export const metadata: Metadata = { title: "My points" };
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getRequestLocale();
+  return { title: translate(locale, "meta.app.me.page.tsx.title") };
+}
 
 export default async function MePage() {
+  const locale = await getRequestLocale();
+  const tr = translate.bind(null, locale) as Translator;
+
   const session = await getSession();
   if (!session) redirect("/enter");
   if (session.role !== "kid") redirect("/dashboard");
@@ -156,37 +165,43 @@ export default async function MePage() {
         <form action={signOutAction}>
           <button type="submit" className={styles.signOut}>
             <LogOut size={18} aria-hidden="true" />
-            Sign out
+            {tr("ui.sign.out")}
           </button>
         </form>
       </header>
 
-      <h1 className={styles.title}>Hi {me.name}! 👋</h1>
+      <h1 className={styles.title}>
+        {tr("auth.welcome", { name: me.name })}! 👋
+      </h1>
 
       <section className={styles.card} aria-labelledby="points-heading">
         <h2 id="points-heading" className={styles.pointsLabel}>
-          Your points
+          {tr("ui.your.points")}
         </h2>
         <p className={balance < 0 ? styles.pointsNeg : styles.points}>
           <CountUp value={balance} />
         </p>
         <p className={styles.muted}>
           {balance < 0
-            ? `Earn ${-balance} to get back to zero!`
+            ? tr("ui.earn.name.to.get.back.to.zero", { p0: -balance })
             : reserved > 0
-              ? `${available} to spend · ${reserved} on hold`
+              ? tr("ui.name.to.spend.name.on.hold", {
+                  p0: available,
+                  p1: reserved,
+                })
               : balance === 0
-                ? "Earn points for chores and good habits!"
-                : "Keep up the great work!"}
+                ? tr("ui.earn.points.for.chores.and.good.habits")
+                : tr("ui.keep.up.the.great.work")}
         </p>
         {pendingPoints > 0 ? (
           <p className={styles.pending}>
-            +{pendingPoints} waiting for approval
+            +{formatNumber(locale, pendingPoints)}{" "}
+            {tr("ui.waiting.for.approval")}
           </p>
         ) : null}
         {coreTotal === 0 && earnStreak > 0 ? (
           <p className={hype.streak}>
-            🔥 {earnStreak}-day streak — keep it going!
+            🔥 {tr("flow.streak", { count: earnStreak })}
           </p>
         ) : null}
       </section>
@@ -224,7 +239,7 @@ export default async function MePage() {
                 <div className={styles.todoLaterGroup}>
                   <p className={styles.todoLater}>
                     <Hourglass size={14} aria-hidden="true" />
-                    Coming up later
+                    {tr("ui.coming.up.later")}
                   </p>
                   <ul className={styles.todoList}>
                     {todoLater.map((c) => (
@@ -245,7 +260,7 @@ export default async function MePage() {
                 </div>
               ) : null}
               <Link href="/submit" className={styles.todoCta}>
-                See all chores
+                {tr("ui.see.all.chores")}
                 <ArrowRight size={18} aria-hidden="true" />
               </Link>
             </>
@@ -266,15 +281,17 @@ export default async function MePage() {
       {pendingRewards.length > 0 ? (
         <section aria-labelledby="reward-waiting-heading">
           <h2 id="reward-waiting-heading" className={styles.activityTitle}>
-            Waiting for a grown-up
+            {tr("ui.waiting.for.a.grown.up")}
           </h2>
           <ul className={styles.waitList}>
             {pendingRewards.map((r) => (
               <li key={r.id} className={styles.waitRow}>
                 <span className={styles.waitText}>
-                  <span className={styles.rewardWaitName}>{r.rewardName}</span>
+                  <span className={styles.rewardWaitName}>
+                    <bdi>{r.rewardName}</bdi>
+                  </span>
                   <span className={styles.rewardWaitMeta}>
-                    {r.cost} pts · on hold
+                    {formatNumber(locale, r.cost)} {tr("ui.pts.on.hold")}
                   </span>
                 </span>
                 <form action={cancelRedemptionAction}>
@@ -282,7 +299,7 @@ export default async function MePage() {
                   <button
                     type="submit"
                     className={styles.cancelBtn}
-                    aria-label={`Cancel ${r.rewardName}`}
+                    aria-label={tr("ui.cancel.name", { p0: r.rewardName })}
                   >
                     <X size={16} aria-hidden="true" />
                   </button>
@@ -296,19 +313,23 @@ export default async function MePage() {
       {waiting.length > 0 ? (
         <section aria-labelledby="waiting-heading">
           <h2 id="waiting-heading" className={styles.activityTitle}>
-            Waiting for approval
+            {tr("ui.waiting.for.approval.362")}
           </h2>
           <ul className={styles.waitList}>
             {waiting.map((s) => (
               <li key={s.id} className={styles.waitRow}>
-                <span className={styles.waitText}>{s.choreName}</span>
-                <span className={styles.waitPts}>+{s.points}</span>
+                <span className={styles.waitText}>
+                  <bdi>{s.choreName}</bdi>
+                </span>
+                <span dir="ltr" className={styles.waitPts}>
+                  +{formatNumber(locale, s.points)}
+                </span>
                 <form action={cancelSubmissionAction}>
                   <input type="hidden" name="submissionId" value={s.id} />
                   <button
                     type="submit"
                     className={styles.cancelBtn}
-                    aria-label={`Cancel ${s.choreName}`}
+                    aria-label={tr("ui.cancel.name.94", { p0: s.choreName })}
                   >
                     <X size={16} aria-hidden="true" />
                   </button>
@@ -321,9 +342,10 @@ export default async function MePage() {
 
       <section aria-labelledby="activity-heading">
         <h2 id="activity-heading" className={styles.activityTitle}>
-          Recent
+          {tr("ui.recent")}
         </h2>
         <ActivityList
+          timezone={tz}
           entries={activity.map((e) => ({
             id: e.id,
             amount: e.amount,

@@ -1,5 +1,7 @@
 "use client";
 
+import { useLocale } from "@/components/i18n/LocaleProvider";
+import { formatNumber } from "@/lib/i18n";
 import { useEffect, useState } from "react";
 
 /**
@@ -15,6 +17,7 @@ export function CountUp({
   value: number;
   durationMs?: number;
 }) {
+  const locale = useLocale();
   const [display, setDisplay] = useState(value);
 
   useEffect(() => {
@@ -36,5 +39,5 @@ export function CountUp({
     return () => cancelAnimationFrame(raf);
   }, [value, durationMs]);
 
-  return <>{display.toLocaleString()}</>;
+  return <bdi dir="ltr">{formatNumber(locale, display)}</bdi>;
 }

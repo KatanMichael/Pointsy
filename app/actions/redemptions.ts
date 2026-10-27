@@ -1,5 +1,7 @@
 "use server";
 
+import type { FormState } from "@/lib/validation/form";
+import { expectedError } from "@/lib/i18n/errors";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { getDb } from "@/lib/db/client";
@@ -22,11 +24,12 @@ const decisionSchema = z.enum(["approved", "denied"]);
 /* ------------------------------------------------------------------ kid */
 
 export async function requestRedemptionAction(
+  _prev: FormState,
   formData: FormData,
-): Promise<void> {
+): Promise<FormState> {
   const session = await requireKid();
   const rewardId = idSchema.safeParse(formData.get("rewardId"));
-  if (!rewardId.success) return;
+  if (!rewardId.success) return { errorCode: { key: "errors.itemMissing" } };
 
   let redemption;
   try {
@@ -44,8 +47,9 @@ export async function requestRedemptionAction(
       !(err instanceof InsufficientPointsError) &&
       !(err instanceof DuplicateRequestError)
     ) {
-      throw err;
+      return { errorCode: { key: "errors.generic" } };
     }
+    return { errorCode: expectedError(err) };
   }
 
   if (redemption) {
@@ -62,6 +66,7 @@ export async function requestRedemptionAction(
   }
   revalidatePath("/redeem");
   revalidatePath("/me");
+  return { ok: true };
 }
 
 export async function cancelRedemptionAction(

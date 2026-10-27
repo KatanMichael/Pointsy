@@ -1,3 +1,6 @@
+import { formatNumber } from "@/lib/i18n";
+import { getRequestLocale } from "@/lib/i18n/server";
+import { translate, type Translator } from "@/lib/i18n";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import Link from "next/link";
@@ -46,9 +49,15 @@ import { DashboardNav } from "@/components/manage/DashboardNav";
 import { families } from "@/lib/db/schema";
 import styles from "./dashboard.module.css";
 
-export const metadata: Metadata = { title: "Dashboard" };
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getRequestLocale();
+  return { title: translate(locale, "meta.app.dashboard.page.tsx.title") };
+}
 
 export default async function DashboardPage() {
+  const locale = await getRequestLocale();
+  const tr = translate.bind(null, locale) as Translator;
+
   const session = await getSession();
   if (!session) redirect("/sign-in");
   if (session.role !== "parent") redirect("/me");
@@ -84,13 +93,15 @@ export default async function DashboardPage() {
     <main id="main" className={styles.main}>
       <header className={styles.header}>
         <div>
-          <p className={styles.eyebrow}>Welcome back</p>
-          <h1 className={styles.title}>{me.name}</h1>
+          <p className={styles.eyebrow}>{tr("ui.welcome.back")}</p>
+          <h1 className={styles.title}>
+            <bdi>{me.name}</bdi>
+          </h1>
         </div>
         <form action={signOutAction}>
           <button type="submit" className={styles.signOut}>
             <LogOut size={18} aria-hidden="true" />
-            Sign out
+            {tr("ui.sign.out")}
           </button>
         </form>
       </header>
@@ -98,7 +109,7 @@ export default async function DashboardPage() {
       {pending.length > 0 ? (
         <section aria-labelledby="pending-heading">
           <h2 id="pending-heading" className={styles.sectionTitle}>
-            Pending approvals
+            {tr("ui.pending.approvals")}
           </h2>
           <ul className={styles.queueList}>
             {pending.map((p) => (
@@ -111,9 +122,14 @@ export default async function DashboardPage() {
                 </span>
                 <span className={styles.queueText}>
                   <span className={styles.queueTitle}>
-                    {p.kidName} wants {p.rewardName}
+                    {tr("flow.requestedReward", {
+                      name: p.kidName,
+                      reward: p.rewardName,
+                    })}
                   </span>
-                  <span className={styles.queueMeta}>{p.cost} pts</span>
+                  <span className={styles.queueMeta}>
+                    {tr("flow.pts", { count: p.cost })}
+                  </span>
                 </span>
                 <form
                   action={decideRedemptionAction}
@@ -125,20 +141,26 @@ export default async function DashboardPage() {
                     name="decision"
                     value="approved"
                     className={styles.approveBtn}
-                    aria-label={`Approve ${p.rewardName} for ${p.kidName}`}
+                    aria-label={tr("ui.approve.name.for.name", {
+                      p0: p.rewardName,
+                      p1: p.kidName,
+                    })}
                   >
                     <Check size={16} aria-hidden="true" />
-                    Approve
+                    {tr("ui.approve")}
                   </button>
                   <button
                     type="submit"
                     name="decision"
                     value="denied"
                     className={styles.denyBtn}
-                    aria-label={`Deny ${p.rewardName} for ${p.kidName}`}
+                    aria-label={tr("ui.deny.name.for.name", {
+                      p0: p.rewardName,
+                      p1: p.kidName,
+                    })}
                   >
                     <X size={16} aria-hidden="true" />
-                    Deny
+                    {tr("ui.deny")}
                   </button>
                 </form>
               </li>
@@ -150,7 +172,7 @@ export default async function DashboardPage() {
       {teamReady.length > 0 ? (
         <section aria-labelledby="team-approvals-heading">
           <h2 id="team-approvals-heading" className={styles.sectionTitle}>
-            Team-up approvals
+            {tr("ui.team.up.approvals")}
           </h2>
           <ul className={styles.queueList}>
             {teamReady.map((t) => (
@@ -162,9 +184,11 @@ export default async function DashboardPage() {
                   <Users size={20} aria-hidden="true" />
                 </span>
                 <span className={styles.queueText}>
-                  <span className={styles.queueTitle}>{t.rewardName}</span>
+                  <span className={styles.queueTitle}>
+                    <bdi>{t.rewardName}</bdi>
+                  </span>
                   <span className={styles.queueMeta}>
-                    {t.cost} pts ·{" "}
+                    {formatNumber(locale, t.cost)} {tr("ui.pts")}{" "}
                     {t.members.map((m) => `${m.name} ${m.share}`).join(", ")}
                   </span>
                 </span>
@@ -175,20 +199,24 @@ export default async function DashboardPage() {
                     name="decision"
                     value="approved"
                     className={styles.approveBtn}
-                    aria-label={`Approve ${t.rewardName} team-up`}
+                    aria-label={tr("ui.approve.name.team.up", {
+                      p0: t.rewardName,
+                    })}
                   >
                     <Check size={16} aria-hidden="true" />
-                    Approve
+                    {tr("ui.approve")}
                   </button>
                   <button
                     type="submit"
                     name="decision"
                     value="denied"
                     className={styles.denyBtn}
-                    aria-label={`Deny ${t.rewardName} team-up`}
+                    aria-label={tr("ui.deny.name.team.up", {
+                      p0: t.rewardName,
+                    })}
                   >
                     <X size={16} aria-hidden="true" />
-                    Deny
+                    {tr("ui.deny")}
                   </button>
                 </form>
               </li>
@@ -200,7 +228,7 @@ export default async function DashboardPage() {
       {choreSubs.length > 0 ? (
         <section aria-labelledby="chore-approvals-heading">
           <h2 id="chore-approvals-heading" className={styles.sectionTitle}>
-            Chore approvals
+            {tr("ui.chore.approvals")}
           </h2>
           <ul className={styles.queueList}>
             {choreSubs.map((s) => (
@@ -213,17 +241,20 @@ export default async function DashboardPage() {
                 </span>
                 <span className={styles.queueText}>
                   <span className={styles.queueTitle}>
-                    {s.kidName} did {s.choreName}
+                    {tr("flow.didChore", {
+                      name: s.kidName,
+                      chore: s.choreName,
+                    })}
                   </span>
                   <span className={styles.queueMeta}>
-                    +{s.points} pts
+                    +{tr("flow.pts", { count: s.points })}
                     {s.limitScope === "total" ? (
                       <Chip variant="accent">
                         <Users size={12} aria-hidden="true" />
-                        Shared
+                        {tr("ui.shared")}
                       </Chip>
                     ) : s.isCore ? (
-                      <Chip variant="neutral">Core</Chip>
+                      <Chip variant="neutral">{tr("ui.core")}</Chip>
                     ) : null}
                   </span>
                 </span>
@@ -237,20 +268,26 @@ export default async function DashboardPage() {
                     name="decision"
                     value="approved"
                     className={styles.approveBtn}
-                    aria-label={`Approve ${s.choreName} for ${s.kidName}`}
+                    aria-label={tr("ui.approve.name.for.name.65", {
+                      p0: s.choreName,
+                      p1: s.kidName,
+                    })}
                   >
                     <Check size={16} aria-hidden="true" />
-                    Approve
+                    {tr("ui.approve")}
                   </button>
                   <button
                     type="submit"
                     name="decision"
                     value="rejected"
                     className={styles.denyBtn}
-                    aria-label={`Reject ${s.choreName} for ${s.kidName}`}
+                    aria-label={tr("ui.reject.name.for.name", {
+                      p0: s.choreName,
+                      p1: s.kidName,
+                    })}
                   >
                     <X size={16} aria-hidden="true" />
-                    Reject
+                    {tr("ui.reject")}
                   </button>
                 </form>
               </li>
@@ -262,7 +299,7 @@ export default async function DashboardPage() {
       {challengeApprovals.length > 0 ? (
         <section aria-labelledby="challenge-approvals-heading">
           <h2 id="challenge-approvals-heading" className={styles.sectionTitle}>
-            Challenge approvals
+            {tr("ui.challenge.approvals")}
           </h2>
           <ul className={styles.queueList}>
             {challengeApprovals.map((c) => (
@@ -275,9 +312,14 @@ export default async function DashboardPage() {
                 </span>
                 <span className={styles.queueText}>
                   <span className={styles.queueTitle}>
-                    {c.kidName} finished {c.challengeTitle}
+                    {tr("flow.finishedChallenge", {
+                      name: c.kidName,
+                      challenge: c.challengeTitle,
+                    })}
                   </span>
-                  <span className={styles.queueMeta}>+{c.bonusPoints} pts</span>
+                  <span className={styles.queueMeta}>
+                    +{tr("flow.pts", { count: c.bonusPoints })}
+                  </span>
                 </span>
                 <form
                   action={decideChallengeAwardAction}
@@ -289,20 +331,26 @@ export default async function DashboardPage() {
                     name="decision"
                     value="approved"
                     className={styles.approveBtn}
-                    aria-label={`Approve ${c.challengeTitle} for ${c.kidName}`}
+                    aria-label={tr("ui.approve.name.for.name.67", {
+                      p0: c.challengeTitle,
+                      p1: c.kidName,
+                    })}
                   >
                     <Check size={16} aria-hidden="true" />
-                    Approve
+                    {tr("ui.approve")}
                   </button>
                   <button
                     type="submit"
                     name="decision"
                     value="denied"
                     className={styles.denyBtn}
-                    aria-label={`Deny ${c.challengeTitle} for ${c.kidName}`}
+                    aria-label={tr("ui.deny.name.for.name.68", {
+                      p0: c.challengeTitle,
+                      p1: c.kidName,
+                    })}
                   >
                     <X size={16} aria-hidden="true" />
-                    Deny
+                    {tr("ui.deny")}
                   </button>
                 </form>
               </li>
@@ -313,7 +361,7 @@ export default async function DashboardPage() {
 
       <section aria-labelledby="kids-heading">
         <h2 id="kids-heading" className={styles.sectionTitle}>
-          Your kids
+          {tr("ui.your.kids")}
         </h2>
         {kids.length > 0 ? (
           <ul className={styles.kidList}>
@@ -322,7 +370,7 @@ export default async function DashboardPage() {
                 <Link
                   href={`/award/${k.id}`}
                   className={styles.kidIdentity}
-                  aria-label={`Manage ${k.name}'s points`}
+                  aria-label={tr("ui.manage.name.s.points", { p0: k.name })}
                 >
                   <span
                     className={styles.kidAvatar}
@@ -331,13 +379,16 @@ export default async function DashboardPage() {
                     <IconByName name={k.avatar} size={24} />
                   </span>
                   <span className={styles.kidInfo}>
-                    <span className={styles.kidCardName}>{k.name}</span>
+                    <span className={styles.kidCardName}>
+                      <bdi>{k.name}</bdi>
+                    </span>
                     <span
+                      dir="ltr"
                       className={
                         k.balance < 0 ? styles.kidBalanceNeg : styles.kidBalance
                       }
                     >
-                      {k.balance} pts
+                      {tr("flow.pts", { count: k.balance })}
                     </span>
                   </span>
                 </Link>
@@ -345,18 +396,20 @@ export default async function DashboardPage() {
                   <Link
                     href={`/award/${k.id}`}
                     className={styles.awardChip}
-                    aria-label={`Award points to ${k.name}`}
+                    aria-label={tr("ui.award.points.to.name", { p0: k.name })}
                   >
                     <Plus size={16} aria-hidden="true" />
-                    Award
+                    {tr("ui.award")}
                   </Link>
                   <Link
                     href={`/award/${k.id}?mode=deduct`}
                     className={styles.deductChip}
-                    aria-label={`Deduct points from ${k.name}`}
+                    aria-label={tr("ui.deduct.points.from.name", {
+                      p0: k.name,
+                    })}
                   >
                     <Minus size={16} aria-hidden="true" />
-                    Deduct
+                    {tr("ui.deduct")}
                   </Link>
                 </div>
               </li>
@@ -364,8 +417,8 @@ export default async function DashboardPage() {
           </ul>
         ) : (
           <p className={styles.muted}>
-            <Link href="/manage/kids">Add your kids</Link> to start awarding
-            points.
+            <Link href="/manage/kids">{tr("ui.add.your.kids")}</Link>{" "}
+            {tr("ui.to.start.awarding.points")}
           </p>
         )}
       </section>
@@ -373,7 +426,7 @@ export default async function DashboardPage() {
       {awaiting.length > 0 ? (
         <section aria-labelledby="awaiting-heading">
           <h2 id="awaiting-heading" className={styles.sectionTitle}>
-            Awaiting delivery
+            {tr("ui.awaiting.delivery")}
           </h2>
           <ul className={styles.queueList}>
             {awaiting.map((a) => (
@@ -386,17 +439,17 @@ export default async function DashboardPage() {
                 </span>
                 <span className={styles.queueText}>
                   <span className={styles.queueTitle}>
-                    {a.kidName} · {a.rewardName}
+                    <bdi>{a.kidName}</bdi> · <bdi>{a.rewardName}</bdi>
                   </span>
                   <span className={styles.queueMeta}>
-                    {a.cost} pts · approved
+                    {formatNumber(locale, a.cost)} {tr("ui.pts.approved")}
                   </span>
                 </span>
                 <form action={fulfillRedemptionAction}>
                   <input type="hidden" name="redemptionId" value={a.id} />
                   <button type="submit" className={styles.deliverBtn}>
                     <PackageCheck size={16} aria-hidden="true" />
-                    Delivered
+                    {tr("ui.delivered")}
                   </button>
                 </form>
               </li>
@@ -408,7 +461,7 @@ export default async function DashboardPage() {
       {teamAwaiting.length > 0 ? (
         <section aria-labelledby="team-awaiting-heading">
           <h2 id="team-awaiting-heading" className={styles.sectionTitle}>
-            Team rewards to hand out
+            {tr("ui.team.rewards.to.hand.out")}
           </h2>
           <ul className={styles.queueList}>
             {teamAwaiting.map((t) => (
@@ -420,16 +473,19 @@ export default async function DashboardPage() {
                   <Users size={20} aria-hidden="true" />
                 </span>
                 <span className={styles.queueText}>
-                  <span className={styles.queueTitle}>{t.rewardName}</span>
+                  <span className={styles.queueTitle}>
+                    <bdi>{t.rewardName}</bdi>
+                  </span>
                   <span className={styles.queueMeta}>
-                    {t.members.map((m) => m.name).join(" & ")} · approved
+                    {t.members.map((m) => m.name).join(" & ")}{" "}
+                    {tr("ui.approved")}
                   </span>
                 </span>
                 <form action={fulfillTeamAction}>
                   <input type="hidden" name="teamRedemptionId" value={t.id} />
                   <button type="submit" className={styles.deliverBtn}>
                     <PackageCheck size={16} aria-hidden="true" />
-                    Delivered
+                    {tr("ui.delivered")}
                   </button>
                 </form>
               </li>
@@ -440,27 +496,29 @@ export default async function DashboardPage() {
 
       <section className={styles.card} aria-labelledby="family-heading">
         <h2 id="family-heading" className={styles.cardTitle}>
-          {family.name}
+          <bdi>{family.name}</bdi>
         </h2>
         <p className={styles.muted}>
-          Kids sign in at the <Link href="/enter">PIN sign-in page</Link> —
-          share this code so a new device can join:
+          {tr("ui.kids.sign.in.at.the")}{" "}
+          <Link href="/enter">{tr("ui.pin.sign.in.page")}</Link>{" "}
+          {tr("ui.share.this.code.so.a.new.device.can.join")}
         </p>
         <p className={styles.code}>{family.code}</p>
         <details className={styles.pinDetails}>
           <summary className={styles.pinSummary}>
             {me.pinHash
-              ? "Change your sign-in PIN"
-              : "Set a sign-in PIN for yourself"}
+              ? tr("ui.change.your.sign.in.pin")
+              : tr("ui.set.a.sign.in.pin.for.yourself")}
           </summary>
           <p className={styles.muted}>
-            Adds you to the profile picker so you can sign in with a PIN on a
-            shared device. You can still use email + password anytime.
+            {tr("ui.adds.you.to.the.profile.picker.so.you.can")}
           </p>
           <SetPinForm hasPin={!!me.pinHash} />
         </details>
         <details className={styles.pinDetails}>
-          <summary className={styles.pinSummary}>Family time zone</summary>
+          <summary className={styles.pinSummary}>
+            {tr("ui.family.time.zone")}
+          </summary>
           <FamilyTimezone current={family.timezone} />
         </details>
       </section>
@@ -470,25 +528,27 @@ export default async function DashboardPage() {
         aria-labelledby="data-heading"
       >
         <h2 id="data-heading" className={styles.cardTitle}>
-          Your data
+          {tr("ui.your.data")}
         </h2>
         <p className={styles.muted}>
-          Download everything in your family as a JSON file, or permanently
-          delete it. Your export never includes passwords or PINs.
+          {tr("ui.download.everything.in.your.family.as.a.json.file")}
         </p>
         <a href="/api/family/export" className={danger.exportLink} download>
           <Download size={16} aria-hidden="true" />
-          Export your data (JSON)
+          {tr("ui.export.your.data.json")}
         </a>
         {family.ownerId === session.personId ? (
           <ConfirmDeleteDisclosure
             detailsClassName={styles.pinDetails}
             summaryClassName={`${styles.pinSummary} ${danger.zoneTitle}`}
-            summary="Delete this family"
+            summary={tr("ui.delete.this.family")}
             action={deleteFamilyAction}
             confirmWord={family.name}
-            buttonLabel="Delete family forever"
-            intro={`This permanently deletes ${family.name} — every parent, child, chore, reward, and all points history. This can’t be undone.`}
+            buttonLabel={tr("ui.delete.family.forever")}
+            intro={tr(
+              "ui.this.permanently.deletes.name.every.parent.child.chore.reward.and",
+              { p0: family.name },
+            )}
           />
         ) : null}
       </section>
