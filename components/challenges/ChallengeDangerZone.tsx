@@ -1,3 +1,5 @@
+"use client";
+import { useTranslations } from "@/components/i18n/LocaleProvider";
 import {
   setChallengeActiveAction,
   deleteChallengeAction,
@@ -15,24 +17,26 @@ export function ChallengeDangerZone({
   title: string;
   isActive: boolean;
 }) {
+  const tr = useTranslations();
+
   return (
     <div className={styles.footer}>
       <form action={setChallengeActiveAction}>
         <input type="hidden" name="id" value={id} />
         <input type="hidden" name="isActive" value={(!isActive).toString()} />
         <button type="submit" className={manage.secondaryBtn}>
-          {isActive ? "Pause challenge" : "Resume challenge"}
+          {isActive ? tr("ui.pause.challenge") : tr("ui.resume.challenge")}
         </button>
       </form>
       <details className={styles.deleteWrap}>
-        <summary className={styles.deleteSummary}>Delete</summary>
+        <summary className={styles.deleteSummary}>{tr("ui.delete")}</summary>
         <form action={deleteChallengeAction} className={styles.deleteForm}>
           <input type="hidden" name="id" value={id} />
           <p className={styles.warn}>
-            This permanently removes “{title}”. Bonuses already paid are kept.
+            {tr("flow.deleteChallenge", { name: title })}
           </p>
           <button type="submit" className={styles.dangerBtn}>
-            Delete permanently
+            {tr("ui.delete.permanently")}
           </button>
         </form>
       </details>

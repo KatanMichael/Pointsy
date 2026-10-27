@@ -1,4 +1,6 @@
 "use client";
+import { translateFormState } from "@/lib/i18n/errors";
+import { useTranslations } from "@/components/i18n/LocaleProvider";
 
 import { useActionState } from "react";
 import { signInAction, type AuthState } from "@/app/actions/auth";
@@ -8,12 +10,18 @@ import styles from "./auth-form.module.css";
 const initialState: AuthState = {};
 
 export function SignInForm() {
-  const [state, action, pending] = useActionState(signInAction, initialState);
+  const tr = useTranslations();
+
+  const [stateCodes, action, pending] = useActionState(
+    signInAction,
+    initialState,
+  );
+  const state = translateFormState(stateCodes, tr);
 
   return (
     <form action={action} className={styles.form} noValidate>
       <Field
-        label="Email"
+        label={tr("ui.email")}
         name="email"
         type="email"
         autoComplete="email"
@@ -22,7 +30,7 @@ export function SignInForm() {
         required
       />
       <Field
-        label="Password"
+        label={tr("ui.password")}
         name="password"
         type="password"
         autoComplete="current-password"
@@ -37,7 +45,7 @@ export function SignInForm() {
       ) : null}
 
       <button type="submit" className={styles.submit} disabled={pending}>
-        {pending ? "Signing in…" : "Sign in"}
+        {pending ? tr("ui.signing.in") : tr("ui.sign.in")}
       </button>
     </form>
   );

@@ -1,4 +1,5 @@
 "use server";
+import { expectedError } from "@/lib/i18n/errors";
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
@@ -21,7 +22,9 @@ const decisionSchema = z.enum(["approved", "denied"]);
 
 const proposeSchema = z.object({
   rewardId: z.string().uuid(),
-  kidIds: z.array(z.string().uuid()).min(1, "Pick at least one teammate."),
+  kidIds: z
+    .array(z.string().uuid())
+    .min(1, "errors.validation.pick.at.least.one.teammate"),
 });
 
 /* ------------------------------------------------------------------ kid */
@@ -36,7 +39,7 @@ export async function proposeTeamAction(
     rewardId: formData.get("rewardId"),
     kidIds: formData.getAll("kidIds"),
   });
-  if (!parsed.success) return { fieldErrors: toFieldErrors(parsed.error) };
+  if (!parsed.success) return { fieldErrorCodes: toFieldErrors(parsed.error) };
 
   try {
     await proposeTeamRedemption(
@@ -47,7 +50,8 @@ export async function proposeTeamAction(
       parsed.data.kidIds,
     );
   } catch (err) {
-    if (err instanceof TeamRewardError) return { error: err.message };
+    if (err instanceof TeamRewardError)
+      return { errorCode: expectedError(err) };
     throw err;
   }
   const me = await getPersonById(getDb(), session.familyId, session.personId);

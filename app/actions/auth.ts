@@ -1,5 +1,6 @@
 "use server";
 
+import { getRequestLocale } from "@/lib/i18n/server";
 import { redirect } from "next/navigation";
 import { getDb } from "@/lib/db/client";
 import { createSession, destroySession } from "@/lib/auth/session";
@@ -12,10 +13,7 @@ import {
 import { signUpSchema, signInSchema } from "@/lib/validation/schemas";
 import { toFieldErrors } from "@/lib/validation/form";
 
-export interface AuthState {
-  error?: string;
-  fieldErrors?: Record<string, string>;
-}
+export type AuthState = import("@/lib/validation/form").FormState;
 
 export async function signUpAction(
   _prev: AuthState,
@@ -28,12 +26,13 @@ export async function signUpAction(
     password: formData.get("password"),
     consent: formData.get("consent") === "on",
   });
-  if (!parsed.success) return { fieldErrors: toFieldErrors(parsed.error) };
+  if (!parsed.success) return { fieldErrorCodes: toFieldErrors(parsed.error) };
 
   try {
     const tz = formData.get("timezone");
     const result = await registerFamily(getDb(), {
       ...parsed.data,
+      locale: await getRequestLocale(),
       timezone: typeof tz === "string" ? tz : undefined,
     });
     await createSession({
@@ -44,7 +43,7 @@ export async function signUpAction(
     await rememberFamily(result.familyId);
   } catch (err) {
     if (err instanceof EmailTakenError) {
-      return { fieldErrors: { email: err.message } };
+      return { fieldErrorCodes: { email: { key: "errors.emailTaken" } } };
     }
     throw err;
   }
@@ -61,14 +60,14 @@ export async function signInAction(
     email: formData.get("email"),
     password: formData.get("password"),
   });
-  if (!parsed.success) return { fieldErrors: toFieldErrors(parsed.error) };
+  if (!parsed.success) return { fieldErrorCodes: toFieldErrors(parsed.error) };
 
   const parent = await authenticateParent(
     getDb(),
     parsed.data.email,
     parsed.data.password,
   );
-  if (!parent) return { error: "Incorrect email or password." };
+  if (!parent) return { errorCode: { key: "errors.invalidCredentials" } };
 
   await createSession({
     familyId: parent.familyId,

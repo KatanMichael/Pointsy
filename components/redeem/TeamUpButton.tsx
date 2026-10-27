@@ -1,4 +1,6 @@
 "use client";
+import { translateFormState } from "@/lib/i18n/errors";
+import { useTranslations } from "@/components/i18n/LocaleProvider";
 
 import { useActionState, useEffect, useRef, useState } from "react";
 import { IconByName } from "@/components/icons/registry";
@@ -31,11 +33,14 @@ export function TeamUpButton({
   className?: string;
   children: React.ReactNode;
 }) {
+  const tr = useTranslations();
+
   const ref = useRef<HTMLDialogElement>(null);
-  const [state, action, pending] = useActionState(
+  const [stateCodes, action, pending] = useActionState(
     proposeTeamAction,
     initialState,
   );
+  const state = translateFormState(stateCodes, tr);
   const [selected, setSelected] = useState<Set<string>>(new Set());
 
   useEffect(() => {
@@ -68,17 +73,25 @@ export function TeamUpButton({
       <dialog
         ref={ref}
         className={styles.sheet}
-        aria-label={`Team up for ${reward.name}`}
+        aria-label={tr("ui.team.up.for.name", { p0: reward.name })}
       >
-        <p className={styles.title}>Team up for {reward.name}</p>
-        <p className={styles.cost}>{reward.cost} points, split evenly</p>
+        <p className={styles.title}>
+          {tr("flow.teamTitle", { name: reward.name })}
+        </p>
+        <p className={styles.cost}>
+          {tr("flow.teamCost", { points: reward.cost })}
+        </p>
 
         <form action={action} className={styles.form}>
           <input type="hidden" name="rewardId" value={reward.id} />
           <fieldset className={styles.kids}>
-            <legend className={styles.legend}>Who&rsquo;s teaming up?</legend>
+            <legend className={styles.legend}>
+              {tr("ui.who.s.teaming.up")}
+            </legend>
             {otherKids.length === 0 ? (
-              <p className={styles.muted}>No one else to team up with yet.</p>
+              <p className={styles.muted}>
+                {tr("ui.no.one.else.to.team.up.with.yet")}
+              </p>
             ) : (
               otherKids.map((k) => (
                 <label key={k.id} className={styles.kidRow}>
@@ -96,7 +109,9 @@ export function TeamUpButton({
                   >
                     <IconByName name={k.avatar} size={18} />
                   </span>
-                  <span>{k.name}</span>
+                  <span>
+                    <bdi>{k.name}</bdi>
+                  </span>
                 </label>
               ))
             )}
@@ -104,8 +119,13 @@ export function TeamUpButton({
 
           <p className={styles.share}>
             {enough
-              ? `${total} kids · your share is ${myShare} points`
-              : `Pick at least ${reward.minKids} kids in total`}
+              ? tr("ui.name.kids.your.share.is.name.points", {
+                  p0: total,
+                  p1: myShare,
+                })
+              : tr("ui.pick.at.least.name.kids.in.total", {
+                  p0: reward.minKids,
+                })}
           </p>
           {state.error ? (
             <p className={styles.error} role="alert">
@@ -117,7 +137,7 @@ export function TeamUpButton({
             className={styles.propose}
             disabled={pending || !enough}
           >
-            {pending ? "Sending…" : "Send team-up invites"}
+            {pending ? tr("ui.sending") : tr("ui.send.team.up.invites")}
           </button>
         </form>
 
@@ -126,7 +146,7 @@ export function TeamUpButton({
           className={styles.cancel}
           onClick={() => ref.current?.close()}
         >
-          Not now
+          {tr("ui.not.now")}
         </button>
       </dialog>
     </>

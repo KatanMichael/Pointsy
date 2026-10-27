@@ -23,6 +23,7 @@ export interface RegisterFamilyInput {
   email: string;
   password: string;
   timezone?: string;
+  locale?: import("@/lib/i18n").Locale;
 }
 
 export interface RegisterFamilyResult {
@@ -101,7 +102,7 @@ export async function registerFamily(
       .where(eq(families.id, family.id));
 
     // Give the family a sensible starter set of chore categories to organise into.
-    await seedDefaultCategories(tx, family.id);
+    await seedDefaultCategories(tx, family.id, input.locale);
 
     return {
       familyId: family.id,

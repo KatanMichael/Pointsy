@@ -234,7 +234,7 @@
 /* Tappable variant — the kid taps to log it (a confirmation sheet follows). */
 .todoBtn {
   width: 100%;
-  text-align: left;
+  text-align: start;
   cursor: pointer;
   transition:
     border-color 0.12s ease,

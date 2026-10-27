@@ -1,4 +1,5 @@
 "use client";
+import { useTranslations, useLocale } from "@/components/i18n/LocaleProvider";
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
@@ -32,6 +33,9 @@ export function AwardSurface({
   otherKids: AwardKid[];
   initialMode: "award" | "deduct";
 }) {
+  const locale = useLocale();
+  const tr = useTranslations();
+
   const [also, setAlso] = useState<string[]>([]);
 
   // Keep the picks in the kids' display order, and drop any that no longer
@@ -68,9 +72,13 @@ export function AwardSurface({
           onToggle={toggleAlso}
           hint={
             alsoKids.length > 0
-              ? `Points and chores below apply to ${formatNameList(
-                  recipients.map((r) => r.name),
-                )}.`
+              ? tr("ui.points.and.chores.below.apply.to.name", {
+                  p0: formatNameList(
+                    recipients.map((r) => r.name),
+                    undefined,
+                    locale,
+                  ),
+                })
               : undefined
           }
         />
@@ -84,7 +92,7 @@ export function AwardSurface({
 
       <section aria-labelledby="chores-title">
         <h2 id="chores-title" className={styles.sectionTitle}>
-          Award a chore
+          {tr("ui.award.a.chore")}
         </h2>
         {chores.length > 0 ? (
           <AwardBoard
@@ -96,7 +104,8 @@ export function AwardSurface({
           />
         ) : (
           <p className={styles.empty}>
-            No chores yet. <Link href="/manage/chores">Add some first</Link>.
+            {tr("ui.no.chores.yet")}{" "}
+            <Link href="/manage/chores">{tr("ui.add.some.first")}</Link>.
           </p>
         )}
       </section>

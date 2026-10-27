@@ -1,4 +1,5 @@
 "use server";
+import { expectedError } from "@/lib/i18n/errors";
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -24,7 +25,7 @@ const idSchema = z.string().uuid();
 export interface InviteState {
   code?: string;
   expiresAt?: string;
-  error?: string;
+  errorCode?: import("@/lib/i18n/errors").UiError;
 }
 
 /** Any parent can create a one-time invite code (shown once). */
@@ -51,12 +52,12 @@ export async function revokeParentInviteAction(
 
 /** Deactivate a co-parent. Owner-only; guard errors surface as a message. */
 export async function removeParentAction(
-  _prev: { error?: string },
+  _prev: FormState,
   formData: FormData,
-): Promise<{ error?: string }> {
+): Promise<FormState> {
   const session = await requireParent();
   const id = idSchema.safeParse(formData.get("parentId"));
-  if (!id.success) return { error: "Something went wrong." };
+  if (!id.success) return { errorCode: { key: "errors.generic" } };
   try {
     await removeParent(getDb(), session.familyId, session.personId, id.data);
   } catch (err) {
@@ -64,7 +65,7 @@ export async function removeParentAction(
       err instanceof NotOwnerError ||
       err instanceof CannotRemoveParentError
     ) {
-      return { error: err.message };
+      return { errorCode: expectedError(err) };
     }
     throw err;
   }
@@ -84,7 +85,7 @@ export async function joinFamilyAction(
     password: formData.get("password"),
     consent: formData.get("consent") === "on",
   });
-  if (!parsed.success) return { fieldErrors: toFieldErrors(parsed.error) };
+  if (!parsed.success) return { fieldErrorCodes: toFieldErrors(parsed.error) };
 
   try {
     const result = await redeemParentInvite(getDb(), {
@@ -101,10 +102,10 @@ export async function joinFamilyAction(
     await rememberFamily(result.familyId);
   } catch (err) {
     if (err instanceof InviteInvalidError) {
-      return { fieldErrors: { code: err.message } };
+      return { fieldErrorCodes: { code: { key: "errors.inviteInvalid" } } };
     }
     if (err instanceof EmailTakenError) {
-      return { fieldErrors: { email: err.message } };
+      return { fieldErrorCodes: { email: { key: "errors.emailTaken" } } };
     }
     throw err;
   }

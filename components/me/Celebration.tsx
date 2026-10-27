@@ -1,4 +1,5 @@
 "use client";
+import { useTranslations } from "@/components/i18n/LocaleProvider";
 
 import { useEffect, useState } from "react";
 import styles from "./hype.module.css";
@@ -16,6 +17,8 @@ export function Celebration({
   kidId: string;
   balance: number;
 }) {
+  const tr = useTranslations();
+
   const [gain, setGain] = useState<number | null>(null);
 
   useEffect(() => {
@@ -56,14 +59,18 @@ export function Celebration({
         <span className={styles.celebrateEmoji} aria-hidden="true">
           🎉
         </span>
-        <output className={styles.celebrateBig}>+{gain} points!</output>
-        <p className={styles.celebrateSub}>Awesome work — keep it up!</p>
+        <output className={styles.celebrateBig}>
+          +{gain} {tr("ui.points.167")}
+        </output>
+        <p className={styles.celebrateSub}>
+          {tr("ui.awesome.work.keep.it.up")}
+        </p>
         <button
           type="button"
           className={styles.celebrateBtn}
           onClick={() => setGain(null)}
         >
-          Yay!
+          {tr("ui.yay")}
         </button>
       </div>
     </div>

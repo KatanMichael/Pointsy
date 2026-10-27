@@ -1,4 +1,6 @@
 "use client";
+import { translateFormState } from "@/lib/i18n/errors";
+import { useTranslations } from "@/components/i18n/LocaleProvider";
 
 import { useActionState } from "react";
 import Link from "next/link";
@@ -10,15 +12,18 @@ import styles from "@/components/auth/auth-form.module.css";
 const initialState: FormState = {};
 
 export function JoinForm() {
-  const [state, action, pending] = useActionState(
+  const tr = useTranslations();
+
+  const [stateCodes, action, pending] = useActionState(
     joinFamilyAction,
     initialState,
   );
+  const state = translateFormState(stateCodes, tr);
 
   return (
     <form action={action} className={styles.form} noValidate>
       <Field
-        label="Invite code"
+        label={tr("ui.invite.code")}
         name="code"
         autoComplete="off"
         autoCapitalize="characters"
@@ -26,14 +31,14 @@ export function JoinForm() {
         required
       />
       <Field
-        label="Your name"
+        label={tr("ui.your.name")}
         name="name"
         autoComplete="name"
         error={state.fieldErrors?.name}
         required
       />
       <Field
-        label="Email"
+        label={tr("ui.email")}
         name="email"
         type="email"
         autoComplete="email"
@@ -42,11 +47,11 @@ export function JoinForm() {
         required
       />
       <Field
-        label="Password"
+        label={tr("ui.password")}
         name="password"
         type="password"
         autoComplete="new-password"
-        hint="At least 8 characters."
+        hint={tr("ui.at.least.8.characters")}
         error={state.fieldErrors?.password}
         required
       />
@@ -64,9 +69,9 @@ export function JoinForm() {
           htmlFor="consent"
           className={styles.consentLabel}
         >
-          I am a parent or guardian and agree to the{" "}
-          <Link href="/terms">Terms</Link> and{" "}
-          <Link href="/privacy">Privacy Policy</Link>.
+          {tr("flow.consentStart")} <Link href="/terms">{tr("ui.terms")}</Link>
+          {tr("flow.and")}
+          <Link href="/privacy">{tr("ui.privacy.policy")}</Link>.
         </label>
       </div>
       {state.fieldErrors?.consent ? (
@@ -82,7 +87,7 @@ export function JoinForm() {
       ) : null}
 
       <button type="submit" className={styles.submit} disabled={pending}>
-        {pending ? "Joining…" : "Join family"}
+        {pending ? tr("ui.joining") : tr("ui.join.family")}
       </button>
     </form>
   );

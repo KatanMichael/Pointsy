@@ -1,4 +1,5 @@
 "use client";
+import { useTranslations } from "@/components/i18n/LocaleProvider";
 
 import { useState } from "react";
 import { IconByName } from "@/components/icons/registry";
@@ -17,6 +18,8 @@ export interface ChoreGroup {
  * grouped, self-contained chore cards.
  */
 export function ChoreCatalog({ groups }: { groups: ChoreGroup[] }) {
+  const tr = useTranslations();
+
   const [active, setActive] = useState<string | null>(null);
   const shown = active ? groups.filter((g) => g.meta.id === active) : groups;
   const total = groups.reduce((n, g) => n + g.items.length, 0);
@@ -25,7 +28,7 @@ export function ChoreCatalog({ groups }: { groups: ChoreGroup[] }) {
     <div className={styles.catalog}>
       {groups.length > 1 ? (
         <fieldset className={styles.filterRow}>
-          <legend className="sr-only">Filter by category</legend>
+          <legend className="sr-only">{tr("ui.filter.by.category")}</legend>
           <button
             type="button"
             className={styles.filterChip}
@@ -33,7 +36,7 @@ export function ChoreCatalog({ groups }: { groups: ChoreGroup[] }) {
             aria-pressed={active === null}
             onClick={() => setActive(null)}
           >
-            All
+            {tr("ui.all")}
             <span className={styles.filterCount}>{total}</span>
           </button>
           {groups.map((g) => (
@@ -46,7 +49,7 @@ export function ChoreCatalog({ groups }: { groups: ChoreGroup[] }) {
               onClick={() => setActive(g.meta.id)}
             >
               <IconByName name={g.meta.icon} size={15} />
-              {g.meta.name}
+              <bdi>{g.meta.name}</bdi>
               <span className={styles.filterCount}>{g.items.length}</span>
             </button>
           ))}
@@ -61,7 +64,7 @@ export function ChoreCatalog({ groups }: { groups: ChoreGroup[] }) {
         >
           <h2 className={manage.sectionTitle}>
             <IconByName name={meta.icon} size={18} />
-            {meta.name}
+            <bdi>{meta.name}</bdi>
           </h2>
           <ul className={manage.list}>
             {items.map((c) => (

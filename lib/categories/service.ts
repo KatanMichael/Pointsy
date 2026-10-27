@@ -25,11 +25,23 @@ export type MoveDirection = "up" | "down";
 export async function seedDefaultCategories(
   db: Database,
   familyId: string,
+  locale: import("@/lib/i18n").Locale = "en",
 ): Promise<void> {
+  const names = [
+    "חדר שינה",
+    "חדר רחצה",
+    "מטבח",
+    "ברחבי הבית",
+    "בחוץ",
+    "חיות מחמד",
+    "בית ספר",
+    "טיפוח עצמי",
+    "אחר",
+  ];
   await db.insert(choreCategories).values(
     DEFAULT_CHORE_CATEGORIES.map((c, i) => ({
       familyId,
-      name: c.name,
+      name: locale === "he" ? names[i] : c.name,
       icon: c.icon,
       sortOrder: i,
     })),

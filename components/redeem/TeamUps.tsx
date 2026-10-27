@@ -1,14 +1,18 @@
+"use client";
+import type { Translator } from "@/lib/i18n";
+
+import { useTranslations } from "@/components/i18n/LocaleProvider";
 import { Users } from "lucide-react";
 import { IconByName } from "@/components/icons/registry";
 import { respondTeamAction, cancelTeamAction } from "@/app/actions/team";
 import type { TeamRedemptionView } from "@/lib/redemptions/team";
 import styles from "./team-list.module.css";
 
-function statusLabel(t: TeamRedemptionView): string {
-  if (t.status === "approved") return "Approved! 🎉";
+function statusLabel(t: TeamRedemptionView, tr: Translator): string {
+  if (t.status === "approved") return tr("ui.approved");
   return t.members.every((m) => m.status === "accepted")
-    ? "Waiting for a grown-up"
-    : "Waiting for teammates";
+    ? tr("ui.waiting.for.a.grown.up")
+    : tr("ui.waiting.for.teammates");
 }
 
 /** A kid's team-up invites (to answer) and the team-ups they're already in. */
@@ -21,6 +25,8 @@ export function TeamUps({
   invites: TeamRedemptionView[];
   mine: TeamRedemptionView[];
 }) {
+  const tr = useTranslations();
+
   // "mine" overlaps invites — only show ones the kid has actually committed to.
   const committed = mine.filter(
     (t) => t.members.find((m) => m.personId === kidId)?.status === "accepted",
@@ -31,7 +37,7 @@ export function TeamUps({
     <section aria-labelledby="teamups-title" className={styles.wrap}>
       <h2 id="teamups-title" className={styles.heading}>
         <Users size={20} aria-hidden="true" />
-        Team-ups
+        {tr("ui.team.ups")}
       </h2>
 
       {invites.map((t) => {
@@ -40,10 +46,14 @@ export function TeamUps({
         return (
           <div key={t.id} className={styles.invite}>
             <p className={styles.inviteText}>
-              <strong>{proposer?.name ?? "A teammate"}</strong> wants to team up
-              for <strong>{t.rewardName}</strong>.
+              {tr("flow.teamInvite", {
+                name: proposer?.name ?? tr("ui.a.teammate"),
+                reward: t.rewardName,
+              })}
             </p>
-            <p className={styles.share}>Your share: {myShare} points</p>
+            <p className={styles.share}>
+              {tr("flow.myShare", { points: myShare })}
+            </p>
             <form action={respondTeamAction} className={styles.respond}>
               <input type="hidden" name="teamRedemptionId" value={t.id} />
               <button
@@ -52,7 +62,7 @@ export function TeamUps({
                 value="true"
                 className={styles.yes}
               >
-                I&rsquo;m in!
+                {tr("ui.i.m.in")}
               </button>
               <button
                 type="submit"
@@ -60,7 +70,7 @@ export function TeamUps({
                 value="false"
                 className={styles.no}
               >
-                No thanks
+                {tr("ui.no.thanks")}
               </button>
             </form>
           </div>
@@ -70,8 +80,10 @@ export function TeamUps({
       {committed.map((t) => (
         <div key={t.id} className={styles.row}>
           <span className={styles.rowText}>
-            <span className={styles.rowName}>{t.rewardName}</span>
-            <span className={styles.rowStatus}>{statusLabel(t)}</span>
+            <span className={styles.rowName}>
+              <bdi>{t.rewardName}</bdi>
+            </span>
+            <span className={styles.rowStatus}>{statusLabel(t, tr)}</span>
           </span>
           <span className={styles.avatars}>
             {t.members.map((m) => (
@@ -80,7 +92,7 @@ export function TeamUps({
                 className={styles.avatar}
                 style={{ background: m.color }}
                 data-out={m.status === "declined"}
-                title={`${m.name} · ${m.share} pts`}
+                title={tr("ui.name.name.pts", { p0: m.name, p1: m.share })}
               >
                 <IconByName name={m.avatar} size={16} />
               </span>
@@ -90,7 +102,7 @@ export function TeamUps({
             <form action={cancelTeamAction}>
               <input type="hidden" name="teamRedemptionId" value={t.id} />
               <button type="submit" className={styles.cancel}>
-                Cancel
+                {tr("ui.cancel")}
               </button>
             </form>
           ) : null}

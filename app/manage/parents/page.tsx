@@ -1,3 +1,5 @@
+import { getRequestLocale } from "@/lib/i18n/server";
+import { translate, type Translator } from "@/lib/i18n";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { Crown } from "lucide-react";
@@ -11,13 +13,19 @@ import { ScreenHeader } from "@/components/ui/ScreenHeader";
 import { ManageNav } from "@/components/manage/ManageNav";
 import styles from "@/components/parents/parents.module.css";
 
-export const metadata: Metadata = { title: "Parents" };
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getRequestLocale();
+  return { title: translate(locale, "meta.app.manage.parents.page.tsx.title") };
+}
 
 function hoursUntil(date: Date): number {
   return Math.max(0, Math.round((date.getTime() - Date.now()) / 3_600_000));
 }
 
 export default async function ManageParentsPage() {
+  const locale = await getRequestLocale();
+  const tr = translate.bind(null, locale) as Translator;
+
   const session = await getSession();
   if (!session) redirect("/sign-in");
   if (session.role !== "parent") redirect("/me");
@@ -33,27 +41,29 @@ export default async function ManageParentsPage() {
   return (
     <main id="main" className={styles.main}>
       <ScreenHeader
-        title="Parents"
-        intro="Co-parents share this dashboard — they can award points, approve redemptions, and manage kids."
+        title={tr("ui.parents")}
+        intro={tr("ui.co.parents.share.this.dashboard.they.can.award.points")}
       />
 
       <section aria-labelledby="parents-heading">
         <h2 id="parents-heading" className={styles.sectionTitle}>
-          Grown-ups
+          {tr("ui.grown.ups")}
         </h2>
         <ul className={styles.list}>
           {parents.map((p) => (
             <li key={p.id} className={styles.row}>
               <span className={styles.rowText}>
                 <span className={styles.rowName}>
-                  <span className={styles.name}>{p.name}</span>
+                  <span className={styles.name}>
+                    <bdi>{p.name}</bdi>
+                  </span>
                   {p.id === session.personId ? (
-                    <span className={styles.badge}>You</span>
+                    <span className={styles.badge}>{tr("ui.you")}</span>
                   ) : null}
                   {p.isOwner ? (
                     <span className={styles.ownerBadge}>
                       <Crown size={12} aria-hidden="true" />
-                      Owner
+                      {tr("ui.owner")}
                     </span>
                   ) : null}
                 </span>
@@ -71,7 +81,7 @@ export default async function ManageParentsPage() {
 
       <section aria-labelledby="invite-heading">
         <h2 id="invite-heading" className={styles.sectionTitle}>
-          Invite a co-parent
+          {tr("ui.invite.a.co.parent")}
         </h2>
         <InviteParent />
 
@@ -80,12 +90,14 @@ export default async function ManageParentsPage() {
             {invites.map((inv) => (
               <li key={inv.id} className={styles.inviteRow}>
                 <span className={styles.inviteMeta}>
-                  Pending invite · expires in ~{hoursUntil(inv.expiresAt)}h
+                  {tr("flow.inviteExpiry", {
+                    count: hoursUntil(inv.expiresAt),
+                  })}
                 </span>
                 <form action={revokeParentInviteAction}>
                   <input type="hidden" name="inviteId" value={inv.id} />
                   <button type="submit" className={styles.revoke}>
-                    Revoke
+                    {tr("ui.revoke")}
                   </button>
                 </form>
               </li>

@@ -1,3 +1,5 @@
+"use client";
+import { useTranslations, useLocale } from "@/components/i18n/LocaleProvider";
 import Link from "next/link";
 import {
   ChevronRight,
@@ -45,11 +47,20 @@ export interface ChoreRowItem {
 
 /** A self-contained chore card — head taps through to the editor. */
 export function ChoreRow({ item }: { item: ChoreRowItem }) {
-  const freq = formatChoreLimit(item.limitPeriod, item.limitCount);
+  const locale = useLocale();
+  const tr = useTranslations();
+
+  const freq = formatChoreLimit(
+    item.limitPeriod,
+    item.limitCount,
+    undefined,
+    locale,
+  );
   const window = formatLogWindowSummary(
     item.logWindowDays,
     item.logWindowStart,
     item.logWindowEnd,
+    locale,
   );
   return (
     <Card>
@@ -58,14 +69,20 @@ export function ChoreRow({ item }: { item: ChoreRowItem }) {
           <IconByName name={item.emoji} size={24} />
         </span>
         <span className={styles.rowText}>
-          <span className={styles.name}>{item.name}</span>
+          <span className={styles.name}>
+            <bdi>{item.name}</bdi>
+          </span>
           <span className={styles.metaRow}>
-            <Chip variant="accent">{item.points} pts</Chip>
-            {item.isCore ? <Chip variant="neutral">Core</Chip> : null}
+            <Chip variant="accent">
+              {tr("flow.pts", { count: item.points })}
+            </Chip>
+            {item.isCore ? (
+              <Chip variant="neutral">{tr("ui.core")}</Chip>
+            ) : null}
             {item.limitScope === "total" ? (
               <Chip variant="accent">
                 <Users size={12} aria-hidden="true" />
-                Shared
+                {tr("ui.shared")}
               </Chip>
             ) : null}
             {item.whoLabel ? (
@@ -78,7 +95,9 @@ export function ChoreRow({ item }: { item: ChoreRowItem }) {
                 {window}
               </Chip>
             ) : null}
-            {!item.isActive ? <Chip variant="warning">Hidden</Chip> : null}
+            {!item.isActive ? (
+              <Chip variant="warning">{tr("ui.hidden")}</Chip>
+            ) : null}
           </span>
         </span>
         <ChevronRight
@@ -100,7 +119,11 @@ export function ChoreRow({ item }: { item: ChoreRowItem }) {
             type="submit"
             variant={item.pinned ? "accent" : "default"}
             aria-pressed={item.pinned}
-            label={item.pinned ? `Unpin ${item.name}` : `Pin ${item.name}`}
+            label={
+              item.pinned
+                ? tr("ui.unpin.name.80", { p0: item.name })
+                : tr("ui.pin.name", { p0: item.name })
+            }
           >
             <Star
               size={18}
@@ -116,7 +139,7 @@ export function ChoreRow({ item }: { item: ChoreRowItem }) {
             type="submit"
             name="direction"
             value="up"
-            label={`Move ${item.name} up`}
+            label={tr("ui.move.name.up.82", { p0: item.name })}
           >
             <ChevronUp size={18} aria-hidden="true" />
           </IconButton>
@@ -124,7 +147,7 @@ export function ChoreRow({ item }: { item: ChoreRowItem }) {
             type="submit"
             name="direction"
             value="down"
-            label={`Move ${item.name} down`}
+            label={tr("ui.move.name.down.83", { p0: item.name })}
           >
             <ChevronDown size={18} aria-hidden="true" />
           </IconButton>

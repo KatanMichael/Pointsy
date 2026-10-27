@@ -1,3 +1,7 @@
+"use client";
+import { formatNumber } from "@/lib/i18n";
+
+import { useLocale, useTranslations } from "@/components/i18n/LocaleProvider";
 import { setGoalAction } from "@/app/actions/redemptions";
 import { IconByName } from "@/components/icons/registry";
 import type { GoalProgress } from "@/lib/redemptions/service";
@@ -20,12 +24,15 @@ export function KidGoal({
   goal: GoalProgress | null;
   rewardOptions: GoalRewardOption[];
 }) {
+  const locale = useLocale();
+  const tr = useTranslations();
+
   if (rewardOptions.length === 0) return null;
 
   return (
     <section className={styles.goal} aria-labelledby="goal-title">
       <h2 id="goal-title" className={styles.shelfTitle}>
-        My goal
+        {tr("ui.my.goal")}
       </h2>
       {goal ? (
         <div className={styles.goalRow}>
@@ -35,18 +42,24 @@ export function KidGoal({
             pending={goal.pending}
           />
           <div className={styles.goalText}>
-            <span className={styles.shelfName}>{goal.reward.name}</span>
+            <span className={styles.shelfName}>
+              <bdi>{goal.reward.name}</bdi>
+            </span>
             <span className={styles.almostNeed}>
               {goal.pending
-                ? "Requested — waiting for a grown-up ⏳"
+                ? tr("ui.requested.waiting.for.a.grown.up")
                 : goal.moreNeeded === 0
-                  ? "You have enough — go get it! 🎉"
-                  : `${goal.moreNeeded} to go · ${goal.saved}/${goal.reward.cost}`}
+                  ? tr("ui.you.have.enough.go.get.it")
+                  : tr("ui.name.to.go.name.name", {
+                      p0: goal.moreNeeded,
+                      p1: goal.saved,
+                      p2: goal.reward.cost,
+                    })}
             </span>
             <form action={setGoalAction}>
               <input type="hidden" name="rewardId" value="" />
               <button type="submit" className={styles.goalClear}>
-                Clear goal
+                {tr("ui.clear.goal")}
               </button>
             </form>
           </div>
@@ -54,7 +67,7 @@ export function KidGoal({
       ) : (
         <form action={setGoalAction} className={styles.goalPicker}>
           <label htmlFor="goal-reward" className={styles.goalLabel}>
-            Pick a reward to save toward
+            {tr("ui.pick.a.reward.to.save.toward")}
           </label>
           <div className={styles.goalPickRow}>
             <select
@@ -64,12 +77,12 @@ export function KidGoal({
             >
               {rewardOptions.map((r) => (
                 <option key={r.id} value={r.id}>
-                  {r.name} ({r.cost})
+                  <bdi>{r.name}</bdi> ({formatNumber(locale, r.cost)})
                 </option>
               ))}
             </select>
             <button type="submit" className={styles.goalSet}>
-              Set goal
+              {tr("ui.set.goal")}
             </button>
           </div>
         </form>

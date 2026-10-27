@@ -1,5 +1,9 @@
 "use client";
+import { formatNumber } from "@/lib/i18n";
 
+import { useTranslations, useLocale } from "@/components/i18n/LocaleProvider";
+
+import { choreReasonText } from "@/lib/i18n/chore-reason";
 import { useState } from "react";
 import {
   Plus,
@@ -34,13 +38,22 @@ export function SubmitChoreCard({
   chore: SubmittableChore;
   timezone: string;
 }) {
-  const freq = formatChoreLimit(chore.limitPeriod, chore.limitCount);
+  const locale = useLocale();
+  const tr = useTranslations();
+
+  const freq = formatChoreLimit(
+    chore.limitPeriod,
+    chore.limitCount,
+    undefined,
+    locale,
+  );
   // Shared (total) chores show how many slots are left, to create the race.
   const sharedHint =
     chore.limitScope === "total" && chore.remaining !== null
-      ? `First come · ${chore.remaining} left ${
-          chore.limitPeriod === "week" ? "this week" : "today"
-        }`
+      ? tr(
+          chore.limitPeriod === "week" ? "flow.sharedWeek" : "flow.sharedToday",
+          { count: chore.remaining },
+        )
       : null;
   const hasChecklist = chore.subtasks.length > 0;
   const [open, setOpen] = useState(false);
@@ -58,10 +71,16 @@ export function SubmitChoreCard({
             <Lock size={20} />
           </span>
           <span className={styles.choreText}>
-            <span className={styles.choreName}>{chore.name}</span>
-            <span className={styles.lockReason}>{chore.reason}</span>
+            <span className={styles.choreName}>
+              <bdi>{chore.name}</bdi>
+            </span>
+            <span className={styles.lockReason}>
+              {choreReasonText(locale, chore.reasonCode)}
+            </span>
           </span>
-          <span className={styles.chorePtsMuted}>{chore.points}</span>
+          <span dir="ltr" className={styles.chorePtsMuted}>
+            {formatNumber(locale, chore.points)}
+          </span>
         </div>
       </li>
     );
@@ -71,8 +90,8 @@ export function SubmitChoreCard({
   if (chore.windowState === "locked") {
     const now = new Date();
     const label = chore.opensAt
-      ? opensLabel(new Date(chore.opensAt), timezone, now)
-      : "Locked right now";
+      ? opensLabel(new Date(chore.opensAt), timezone, now, locale)
+      : tr("ui.locked.right.now");
     return (
       <li>
         <div className={styles.choreTimed}>
@@ -81,10 +100,14 @@ export function SubmitChoreCard({
               <Clock size={20} />
             </span>
             <span className={styles.choreText}>
-              <span className={styles.choreName}>{chore.name}</span>
+              <span className={styles.choreName}>
+                <bdi>{chore.name}</bdi>
+              </span>
               <span className={styles.lockReason}>{label}</span>
             </span>
-            <span className={styles.chorePtsMuted}>+{chore.points}</span>
+            <span dir="ltr" className={styles.chorePtsMuted}>
+              +{formatNumber(locale, chore.points)}
+            </span>
           </div>
           {chore.opensAt ? <WindowCountdown opensAt={chore.opensAt} /> : null}
         </div>
@@ -102,12 +125,17 @@ export function SubmitChoreCard({
             <Users size={20} />
           </span>
           <span className={styles.choreText}>
-            <span className={styles.choreName}>{chore.name}</span>
+            <span className={styles.choreName}>
+              <bdi>{chore.name}</bdi>
+            </span>
             <span className={styles.lockReason}>
-              {chore.reason ?? "Already done"}
+              {choreReasonText(locale, chore.reasonCode) ??
+                tr("ui.already.done")}
             </span>
           </span>
-          <span className={styles.chorePtsMuted}>+{chore.points}</span>
+          <span dir="ltr" className={styles.chorePtsMuted}>
+            +{formatNumber(locale, chore.points)}
+          </span>
         </div>
       </li>
     );
@@ -122,10 +150,16 @@ export function SubmitChoreCard({
             <Check size={22} />
           </span>
           <span className={styles.choreText}>
-            <span className={styles.choreName}>{chore.name}</span>
-            <span className={styles.doneTag}>{chore.reason ?? "Done!"}</span>
+            <span className={styles.choreName}>
+              <bdi>{chore.name}</bdi>
+            </span>
+            <span className={styles.doneTag}>
+              {choreReasonText(locale, chore.reasonCode) ?? tr("ui.done")}
+            </span>
           </span>
-          <span className={styles.chorePtsMuted}>+{chore.points}</span>
+          <span dir="ltr" className={styles.chorePtsMuted}>
+            +{formatNumber(locale, chore.points)}
+          </span>
         </div>
       </li>
     );
@@ -142,9 +176,13 @@ export function SubmitChoreCard({
               <IconByName name={chore.emoji} size={24} />
             </span>
             <span className={styles.choreText}>
-              <span className={styles.choreName}>{chore.name}</span>
+              <span className={styles.choreName}>
+                <bdi>{chore.name}</bdi>
+              </span>
               {chore.description ? (
-                <span className={styles.choreDesc}>{chore.description}</span>
+                <span className={styles.choreDesc}>
+                  <bdi>{chore.description}</bdi>
+                </span>
               ) : null}
               {sharedHint ? (
                 <span className={styles.choreShared}>
@@ -154,15 +192,17 @@ export function SubmitChoreCard({
               ) : chore.closesAt ? (
                 <span className={styles.choreOpen}>
                   <Clock size={12} aria-hidden="true" />
-                  {openNowLabel(new Date(chore.closesAt), timezone)}
+                  {openNowLabel(new Date(chore.closesAt), timezone, locale)}
                 </span>
               ) : (
-                <span className={styles.choreFreq}>{freq ?? "Anytime"}</span>
+                <span className={styles.choreFreq}>
+                  {freq ?? tr("ui.anytime")}
+                </span>
               )}
             </span>
-            <span className={styles.chorePts}>
+            <span dir="ltr" className={styles.chorePts}>
               <Plus size={14} aria-hidden="true" />
-              {chore.points}
+              {formatNumber(locale, chore.points)}
             </span>
           </button>
         </form>
@@ -184,10 +224,15 @@ export function SubmitChoreCard({
           <IconByName name={chore.emoji} size={24} />
         </span>
         <span className={styles.choreText}>
-          <span className={styles.choreName}>{chore.name}</span>
+          <span className={styles.choreName}>
+            <bdi>{chore.name}</bdi>
+          </span>
           <span className={styles.choreSteps}>
             <ListChecks size={14} aria-hidden="true" />
-            {doneCount}/{chore.subtasks.length} steps
+            {tr("flow.stepProgress", {
+              done: doneCount,
+              total: chore.subtasks.length,
+            })}
           </span>
         </span>
         <ChevronDown
@@ -216,8 +261,8 @@ export function SubmitChoreCard({
             <input type="hidden" name="choreId" value={chore.id} />
             <button type="submit" className={styles.logBtn} disabled={!allDone}>
               {allDone
-                ? `Log it · +${chore.points}`
-                : `Tick all ${chore.subtasks.length} steps`}
+                ? tr("ui.log.it.name", { p0: chore.points })
+                : tr("ui.tick.all.name.steps", { p0: chore.subtasks.length })}
             </button>
           </form>
         </div>

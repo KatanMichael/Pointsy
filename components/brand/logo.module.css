@@ -1,11 +1,13 @@
 .lockup {
+  direction: ltr;
+  unicode-bidi: isolate;
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
 }
 
 .wordmark {
-  font-family: var(--font-display);
+  font-family: var(--font-sora), var(--font-inter), sans-serif;
   font-weight: 800;
   font-size: 1.25rem;
   letter-spacing: -0.02em;

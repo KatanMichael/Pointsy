@@ -1,3 +1,5 @@
+import { getRequestLocale } from "@/lib/i18n/server";
+import { translate, type Translator } from "@/lib/i18n";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -5,14 +7,19 @@ import { getSession } from "@/lib/auth/session";
 import { JoinForm } from "@/components/parents/JoinForm";
 import styles from "../auth.module.css";
 
-export const metadata: Metadata = {
-  title: "Join a family",
-  description:
-    "Have an invite code from another parent? Join their family on Pointsy and share the dashboard.",
-  alternates: { canonical: "/join" },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getRequestLocale();
+  return {
+    title: translate(locale, "meta.app.auth.join.page.tsx.title"),
+    description: translate(locale, "meta.app.auth.join.page.tsx.description"),
+    alternates: { canonical: "/join" },
+  };
+}
 
 export default async function JoinPage() {
+  const locale = await getRequestLocale();
+  const tr = translate.bind(null, locale) as Translator;
+
   // Already signed in? You're already in a family.
   const session = await getSession();
   if (session) redirect(session.role === "kid" ? "/me" : "/dashboard");
@@ -22,16 +29,16 @@ export default async function JoinPage() {
       <section className={styles.card} aria-labelledby="join-title">
         <div className={styles.intro}>
           <h1 id="join-title" className={styles.title}>
-            Join a family
+            {tr("ui.join.a.family")}
           </h1>
           <p className={styles.subtitle}>
-            Enter the invite code another parent shared with you to get access
-            to their Pointsy dashboard.
+            {tr("ui.enter.the.invite.code.another.parent.shared.with.you")}
           </p>
         </div>
         <JoinForm />
         <p className={styles.alt}>
-          Already have an account? <Link href="/sign-in">Sign in</Link>
+          {tr("ui.already.have.an.account")}{" "}
+          <Link href="/sign-in">{tr("ui.sign.in")}</Link>
         </p>
       </section>
     </main>

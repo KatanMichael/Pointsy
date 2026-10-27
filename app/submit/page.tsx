@@ -1,3 +1,5 @@
+import { getRequestLocale } from "@/lib/i18n/server";
+import { translate, type Translator } from "@/lib/i18n";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { Star } from "lucide-react";
@@ -12,9 +14,15 @@ import { SubmitChoreCard } from "@/components/submit/SubmitChoreCard";
 import { KidTabBar } from "@/components/kid/KidTabBar";
 import styles from "./submit.module.css";
 
-export const metadata: Metadata = { title: "My chores" };
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getRequestLocale();
+  return { title: translate(locale, "meta.app.submit.page.tsx.title") };
+}
 
 export default async function SubmitPage() {
+  const locale = await getRequestLocale();
+  const tr = translate.bind(null, locale) as Translator;
+
   const session = await getSession();
   if (!session) redirect("/enter");
   if (session.role !== "kid") redirect("/dashboard");
@@ -35,22 +43,25 @@ export default async function SubmitPage() {
 
   return (
     <main id="main" className={styles.main}>
-      <h1 className={styles.title}>My chores</h1>
+      <h1 className={styles.title}>{tr("ui.my.chores")}</h1>
       <p className={styles.intro}>
-        Tap a chore you finished — a grown-up approves it to add the points.
+        {tr("ui.tap.a.chore.you.finished.a.grown.up.approves")}
       </p>
 
       {chores.length === 0 ? (
         <p className={styles.empty}>
-          No chores yet — ask a parent to add some.
+          {tr("ui.no.chores.yet.ask.a.parent.to.add.some")}
         </p>
       ) : (
         <>
           {core.length > 0 ? (
-            <section className={styles.section} aria-label="Today's must-dos">
+            <section
+              className={styles.section}
+              aria-label={tr("ui.today.s.must.dos.379")}
+            >
               <h2 className={styles.sectionTitle}>
                 <Star size={18} aria-hidden="true" />
-                Today&rsquo;s must-dos
+                {tr("ui.today.s.must.dos.380")}
               </h2>
               <ul className={styles.list}>
                 {core.map((c) => (
@@ -68,7 +79,7 @@ export default async function SubmitPage() {
             >
               <h2 className={styles.sectionTitle}>
                 <IconByName name={meta.icon} size={18} />
-                {meta.name}
+                <bdi>{meta.name}</bdi>
               </h2>
               <ul className={styles.list}>
                 {items

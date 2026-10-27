@@ -1,4 +1,6 @@
 "use client";
+import { translateFormState } from "@/lib/i18n/errors";
+import { useTranslations } from "@/components/i18n/LocaleProvider";
 
 import { useActionState } from "react";
 import { UserMinus } from "lucide-react";
@@ -12,7 +14,10 @@ export function RemoveParentButton({
   parentId: string;
   name: string;
 }) {
-  const [state, action, pending] = useActionState(removeParentAction, {});
+  const tr = useTranslations();
+
+  const [stateCodes, action, pending] = useActionState(removeParentAction, {});
+  const state = translateFormState(stateCodes, tr);
 
   return (
     <form action={action} className={styles.removeForm}>
@@ -21,10 +26,10 @@ export function RemoveParentButton({
         type="submit"
         className={styles.remove}
         disabled={pending}
-        aria-label={`Remove ${name}`}
+        aria-label={tr("ui.remove.name", { p0: name })}
       >
         <UserMinus size={16} aria-hidden="true" />
-        {pending ? "Removing…" : "Remove"}
+        {pending ? tr("ui.removing") : tr("ui.remove.212")}
       </button>
       {state.error ? (
         <span role="alert" className={styles.removeError}>

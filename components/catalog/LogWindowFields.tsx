@@ -1,5 +1,8 @@
 "use client";
+import { useTranslations, useLocale } from "@/components/i18n/LocaleProvider";
 
+import { formatLogWindowSummary } from "@/lib/catalog/limit";
+import { intlLocale } from "@/lib/i18n";
 import { useId, useMemo, useState } from "react";
 import { Clock, Sun, Moon, Eye } from "lucide-react";
 import styles from "./chore-editor.module.css";
@@ -41,15 +44,6 @@ function modeFor(start?: string | null, end?: string | null): TimeMode {
   return "any";
 }
 
-/** 12-hour label for a "HH:MM" string, e.g. "6:00 PM". */
-function fmt(time: string): string {
-  if (!time) return "";
-  const [h, m] = time.split(":").map(Number);
-  const ap = h < 12 ? "AM" : "PM";
-  const h12 = ((h + 11) % 12) + 1;
-  return `${h12}:${String(m).padStart(2, "0")} ${ap}`;
-}
-
 /**
  * The "When can it be logged?" editor controls: a weekday selector plus an
  * optional time-of-day window. Emits `logWindowDays` (one checkbox per selected
@@ -61,6 +55,22 @@ export function LogWindowFields({
 }: {
   defaults?: LogWindowDefaults;
 }) {
+  const tr = useTranslations();
+  const locale = useLocale();
+  const localizedDays = DAYS.map((d, i) => ({
+    name:
+      locale === "en"
+        ? d.name
+        : new Intl.DateTimeFormat(intlLocale(locale), {
+            weekday: "long",
+            timeZone: "UTC",
+          }).format(new Date(Date.UTC(2026, 5, 22 + i))),
+    letter:
+      locale === "en"
+        ? d.letter
+        : ["ב׳", "ג׳", "ד׳", "ה׳", "ו׳", "ש׳", "א׳"][i],
+  }));
+
   const [days, setDays] = useState<boolean[]>(() =>
     maskToBools(defaults?.logWindowDays),
   );
@@ -76,30 +86,22 @@ export function LogWindowFields({
     [days],
   );
 
-  const daysPhrase = useMemo(() => {
-    if (everyDay) return "every day";
-    if (sameDays(days, WEEKDAYS)) return "on weekdays";
-    if (sameDays(days, WEEKENDS)) return "on weekends";
-    const picked = DAYS.filter((_, i) => days[i]).map((d) =>
-      d.name.slice(0, 3),
-    );
-    return `on ${picked.join(", ")}`;
-  }, [days, everyDay]);
-
   const timeError =
     mode === "between" && start && end && end <= start
-      ? "Close time must be after open time."
+      ? tr("errors.validation.close.time.must.be.after.open.time")
       : null;
-
-  const preview = useMemo(() => {
-    let time = "";
-    if (mode === "after" && start) time = `after ${fmt(start)}`;
-    else if (mode === "before" && end) time = `before ${fmt(end)}`;
-    else if (mode === "between" && start && end)
-      time = `between ${fmt(start)} and ${fmt(end)}`;
-    if (everyDay && !time) return "Kids can log this any time.";
-    return `Kids can log this ${daysPhrase}${time ? `, ${time}` : ""}.`;
-  }, [mode, start, end, everyDay, daysPhrase]);
+  const mask = everyDay
+    ? null
+    : days.reduce((mask, v, i) => (v ? mask | (1 << i) : mask), 0);
+  const summary = formatLogWindowSummary(
+    mask,
+    mode === "after" || mode === "between" ? start || null : null,
+    mode === "before" || mode === "between" ? end || null : null,
+    locale,
+  );
+  const preview = summary
+    ? tr("flow.windowPreview", { window: summary })
+    : tr("flow.windowAny");
 
   const showStart = mode === "after" || mode === "between";
   const showEnd = mode === "before" || mode === "between";
@@ -108,34 +110,35 @@ export function LogWindowFields({
     <section className={styles.section}>
       <h2 className={styles.sectionTitle}>
         <Clock size={18} aria-hidden="true" className={styles.titleIcon} />
-        When can it be logged?
+        {tr("ui.when.can.it.be.logged")}
       </h2>
       <p className={styles.muted}>
-        Limit the days and times a kid can log this. You can still award it
-        manually any time.
+        {tr("ui.limit.the.days.and.times.a.kid.can.log")}
       </p>
 
       <fieldset className={styles.windowGroup}>
-        <legend className={styles.windowLegend}>Which days?</legend>
+        <legend className={styles.windowLegend}>{tr("ui.which.days")}</legend>
         <div className={styles.windowBody}>
           <div className={styles.presetRow}>
             {(
               [
-                ["Every day", EVERY_DAY],
-                ["Weekdays", WEEKDAYS],
-                ["Weekends", WEEKENDS],
+                [tr("ui.every.day"), EVERY_DAY],
+                [tr("ui.weekdays"), WEEKDAYS],
+                [tr("ui.weekends"), WEEKENDS],
               ] as const
             ).map(([label, preset]) => (
               <button
                 key={label}
                 type="button"
                 className={
-                  sameDays(days, preset) || (label === "Every day" && everyDay)
+                  sameDays(days, preset) ||
+                  (label === tr("ui.every.day") && everyDay)
                     ? styles.presetActive
                     : styles.preset
                 }
                 aria-pressed={
-                  sameDays(days, preset) || (label === "Every day" && everyDay)
+                  sameDays(days, preset) ||
+                  (label === tr("ui.every.day") && everyDay)
                 }
                 onClick={() => setDays([...preset])}
               >
@@ -144,7 +147,7 @@ export function LogWindowFields({
             ))}
           </div>
           <div className={styles.dayRow}>
-            {DAYS.map((d, i) => (
+            {localizedDays.map((d, i) => (
               <label key={i} className={styles.dayChip}>
                 <input
                   type="checkbox"
@@ -166,7 +169,7 @@ export function LogWindowFields({
 
       <div className={styles.windowGroup}>
         <label htmlFor={modeId} className={styles.windowLegend}>
-          Time of day
+          {tr("ui.time.of.day")}
         </label>
         <div className={styles.windowBody}>
           <select
@@ -175,10 +178,10 @@ export function LogWindowFields({
             value={mode}
             onChange={(e) => setMode(e.target.value as TimeMode)}
           >
-            <option value="any">Any time</option>
-            <option value="after">Only from a set time</option>
-            <option value="before">Only until a set time</option>
-            <option value="between">Only between two times</option>
+            <option value="any">{tr("ui.any.time")}</option>
+            <option value="after">{tr("ui.only.from.a.set.time")}</option>
+            <option value="before">{tr("ui.only.until.a.set.time")}</option>
+            <option value="between">{tr("ui.only.between.two.times")}</option>
           </select>
 
           {showStart || showEnd ? (
@@ -186,13 +189,13 @@ export function LogWindowFields({
               {showStart ? (
                 <div className={styles.timeField}>
                   <label htmlFor="logWindowStart" className={styles.timeLabel}>
-                    <Sun size={15} aria-hidden="true" /> Opens at
+                    <Sun size={15} aria-hidden="true" /> {tr("ui.opens.at")}
                   </label>
                   <input
                     id="logWindowStart"
                     type="time"
                     name="logWindowStart"
-                    aria-label="Opens at"
+                    aria-label={tr("ui.opens.at")}
                     className={styles.timeInput}
                     value={start}
                     required
@@ -203,13 +206,13 @@ export function LogWindowFields({
               {showEnd ? (
                 <div className={styles.timeField}>
                   <label htmlFor="logWindowEnd" className={styles.timeLabel}>
-                    <Moon size={15} aria-hidden="true" /> Closes at
+                    <Moon size={15} aria-hidden="true" /> {tr("ui.closes.at")}
                   </label>
                   <input
                     id="logWindowEnd"
                     type="time"
                     name="logWindowEnd"
-                    aria-label="Closes at"
+                    aria-label={tr("ui.closes.at")}
                     className={styles.timeInput}
                     value={end}
                     required

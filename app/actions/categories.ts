@@ -39,7 +39,7 @@ export async function createCategoryAction(
 ): Promise<FormState> {
   const session = await requireParent();
   const parsed = parseCategory(formData);
-  if (!parsed.success) return { fieldErrors: toFieldErrors(parsed.error) };
+  if (!parsed.success) return { fieldErrorCodes: toFieldErrors(parsed.error) };
 
   await createCategory(getDb(), session.familyId, parsed.data);
   revalidateCategories();
@@ -52,9 +52,9 @@ export async function updateCategoryAction(
 ): Promise<FormState> {
   const session = await requireParent();
   const id = idSchema.safeParse(formData.get("id"));
-  if (!id.success) return { error: "Could not find that category." };
+  if (!id.success) return { errorCode: { key: "errors.categoryMissing" } };
   const parsed = parseCategory(formData);
-  if (!parsed.success) return { fieldErrors: toFieldErrors(parsed.error) };
+  if (!parsed.success) return { fieldErrorCodes: toFieldErrors(parsed.error) };
 
   await updateCategory(getDb(), session.familyId, id.data, parsed.data);
   revalidateCategories();
@@ -78,7 +78,7 @@ export async function deleteCategoryAction(
 ): Promise<FormState> {
   const session = await requireParent();
   const id = idSchema.safeParse(formData.get("id"));
-  if (!id.success) return { error: "Could not find that category." };
+  if (!id.success) return { errorCode: { key: "errors.categoryMissing" } };
   const rawTarget = formData.get("reassignTo");
   const reassignTo =
     typeof rawTarget === "string" && idSchema.safeParse(rawTarget).success
@@ -90,13 +90,13 @@ export async function deleteCategoryAction(
   } catch (err) {
     if (err instanceof LastCategoryError) {
       return {
-        error: "Keep at least one category — families always need one.",
+        errorCode: { key: "errors.lastCategory" },
       };
     }
     if (err instanceof CategoryInUseError) {
-      return { error: "Choose where to move this category's chores first." };
+      return { errorCode: { key: "errors.moveCategory" } };
     }
-    return { error: "Could not delete that category. Please try again." };
+    return { errorCode: { key: "errors.deleteCategory" } };
   }
   revalidateCategories();
   return { ok: true };

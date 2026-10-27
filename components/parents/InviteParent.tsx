@@ -1,4 +1,6 @@
 "use client";
+import { translateFormState } from "@/lib/i18n/errors";
+import { useTranslations } from "@/components/i18n/LocaleProvider";
 
 import { useActionState, useState } from "react";
 import { UserPlus, Copy, Check } from "lucide-react";
@@ -11,10 +13,13 @@ import styles from "./parents.module.css";
 const initial: InviteState = {};
 
 export function InviteParent() {
-  const [state, action, pending] = useActionState(
+  const tr = useTranslations();
+
+  const [stateCodes, action, pending] = useActionState(
     createParentInviteAction,
     initial,
   );
+  const state = translateFormState(stateCodes, tr);
   const [copied, setCopied] = useState(false);
 
   function copy(code: string) {
@@ -27,18 +32,19 @@ export function InviteParent() {
       <form action={action}>
         <button type="submit" className={styles.inviteBtn} disabled={pending}>
           <UserPlus size={18} aria-hidden="true" />
-          {pending ? "Creating…" : "Invite a parent"}
+          {pending ? tr("ui.creating") : tr("ui.invite.a.parent")}
         </button>
       </form>
 
       {state.code ? (
         <output className={styles.codeBox}>
           <p className={styles.codeLabel}>
-            Share this code with the other parent. It works once and expires in
-            72 hours — Pointsy never emails it.
+            {tr("ui.share.this.code.with.the.other.parent.it.works")}
           </p>
           <div className={styles.codeRow}>
-            <span className={styles.code}>{state.code}</span>
+            <span dir="ltr" className={styles.code}>
+              {state.code}
+            </span>
             <button
               type="button"
               onClick={() => copy(state.code as string)}
@@ -49,12 +55,13 @@ export function InviteParent() {
               ) : (
                 <Copy size={16} aria-hidden="true" />
               )}
-              {copied ? "Copied" : "Copy"}
+              {copied ? tr("ui.copied") : tr("ui.copy")}
             </button>
           </div>
           <p className={styles.codeHint}>
-            They enter it at <a href="/join">the join page</a> to create their
-            own login.
+            {tr("ui.they.enter.it.at")}{" "}
+            <a href="/join">{tr("ui.the.join.page")}</a>{" "}
+            {tr("ui.to.create.their.own.login")}
           </p>
         </output>
       ) : null}

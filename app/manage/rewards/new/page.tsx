@@ -1,3 +1,5 @@
+import { getRequestLocale } from "@/lib/i18n/server";
+import { translate, type Translator } from "@/lib/i18n";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth/session";
@@ -8,9 +10,17 @@ import { ScreenHeader } from "@/components/ui/ScreenHeader";
 import { ManageNav } from "@/components/manage/ManageNav";
 import manage from "@/components/manage/manage.module.css";
 
-export const metadata: Metadata = { title: "Add a reward" };
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getRequestLocale();
+  return {
+    title: translate(locale, "meta.app.manage.rewards.new.page.tsx.title"),
+  };
+}
 
 export default async function NewRewardPage() {
+  const locale = await getRequestLocale();
+  const tr = translate.bind(null, locale) as Translator;
+
   const session = await getSession();
   if (!session) redirect("/sign-in");
   if (session.role !== "parent") redirect("/me");
@@ -21,8 +31,8 @@ export default async function NewRewardPage() {
   return (
     <main id="main" className={manage.main}>
       <ScreenHeader
-        title="Add a reward"
-        intro="Give kids something worth saving up for."
+        title={tr("ui.add.a.reward")}
+        intro={tr("ui.give.kids.something.worth.saving.up.for")}
       />
       <AddCatalogForm kind="reward" kids={kids} />
       <ManageNav section="rewards" />

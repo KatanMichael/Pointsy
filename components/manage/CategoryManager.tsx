@@ -1,4 +1,6 @@
 "use client";
+import { translateFormState } from "@/lib/i18n/errors";
+import { useTranslations } from "@/components/i18n/LocaleProvider";
 
 import { useActionState, useEffect, useRef } from "react";
 import { ChevronUp, ChevronDown, Pencil, Plus, Trash2 } from "lucide-react";
@@ -30,8 +32,8 @@ export interface ManagedCategory {
 
 const initial: FormState = {};
 
-function chores(n: number) {
-  return `${n} ${n === 1 ? "chore" : "chores"}`;
+function chores(n: number, tr: import("@/lib/i18n").Translator) {
+  return tr("flow.choreCount", { count: n });
 }
 
 /** Add / edit / reorder / delete the family's chore categories. */
@@ -59,10 +61,13 @@ export function CategoryManager({
 }
 
 function AddCategory() {
-  const [state, action, pending] = useActionState(
+  const tr = useTranslations();
+
+  const [stateCodes, action, pending] = useActionState(
     createCategoryAction,
     initial,
   );
+  const state = translateFormState(stateCodes, tr);
   const ref = useRef<HTMLFormElement>(null);
   useEffect(() => {
     if (state.ok) ref.current?.reset();
@@ -72,11 +77,11 @@ function AddCategory() {
     <details className={styles.addCard}>
       <summary className={styles.addSummary}>
         <Plus size={18} aria-hidden="true" />
-        Add a category
+        {tr("ui.add.a.category")}
       </summary>
       <form ref={ref} action={action} className={form.form} noValidate>
         <Field
-          label="Name"
+          label={tr("ui.name")}
           name="name"
           autoComplete="off"
           error={state.fieldErrors?.name}
@@ -84,7 +89,7 @@ function AddCategory() {
         />
         <IconPicker
           name="icon"
-          label="Icon"
+          label={tr("ui.icon")}
           options={CHORE_ICON_KEYS}
           defaultValue="sparkles"
         />
@@ -94,9 +99,9 @@ function AddCategory() {
           </p>
         ) : null}
         <button type="submit" className={form.submit} disabled={pending}>
-          {pending ? "Adding…" : "Add category"}
+          {pending ? tr("ui.adding") : tr("ui.add.category")}
         </button>
-        {state.ok ? <p className={manage.success}>Added.</p> : null}
+        {state.ok ? <p className={manage.success}>{tr("ui.added")}</p> : null}
       </form>
     </details>
   );
@@ -111,25 +116,31 @@ function CategoryCard({
   others: ManagedCategory[];
   isOnly: boolean;
 }) {
-  const [editState, editAction, editPending] = useActionState(
+  const tr = useTranslations();
+
+  const [editStateCodes, editAction, editPending] = useActionState(
     updateCategoryAction,
     initial,
   );
-  const [delState, delAction, delPending] = useActionState(
+  const editState = translateFormState(editStateCodes, tr);
+  const [delStateCodes, delAction, delPending] = useActionState(
     deleteCategoryAction,
     initial,
   );
+  const delState = translateFormState(delStateCodes, tr);
   const hasChores = category.choreCount > 0;
 
   return (
-    <Card aria-label={`Manage ${category.name}`}>
+    <Card aria-label={tr("ui.manage.name.43", { p0: category.name })}>
       <div className={styles.row}>
         <span className={styles.icon}>
           <IconByName name={category.icon} size={24} />
         </span>
         <div className={styles.text}>
-          <span className={styles.name}>{category.name}</span>
-          <Chip variant="neutral">{chores(category.choreCount)}</Chip>
+          <span className={styles.name}>
+            <bdi>{category.name}</bdi>
+          </span>
+          <Chip variant="neutral">{chores(category.choreCount, tr)}</Chip>
         </div>
         <form action={moveCategoryAction} className={styles.reorder}>
           <input type="hidden" name="id" value={category.id} />
@@ -137,7 +148,7 @@ function CategoryCard({
             type="submit"
             name="direction"
             value="up"
-            label={`Move ${category.name} up`}
+            label={tr("ui.move.name.up", { p0: category.name })}
           >
             <ChevronUp size={18} aria-hidden="true" />
           </IconButton>
@@ -145,7 +156,7 @@ function CategoryCard({
             type="submit"
             name="direction"
             value="down"
-            label={`Move ${category.name} down`}
+            label={tr("ui.move.name.down", { p0: category.name })}
           >
             <ChevronDown size={18} aria-hidden="true" />
           </IconButton>
@@ -156,8 +167,8 @@ function CategoryCard({
         <details className={ui.actionDisclosure}>
           <summary
             className={`${ui.iconBtn} ${ui.iconSummary}`}
-            aria-label={`Edit ${category.name}`}
-            title="Edit"
+            aria-label={tr("ui.edit.name", { p0: category.name })}
+            title={tr("ui.edit")}
           >
             <Pencil size={18} aria-hidden="true" />
           </summary>
@@ -168,7 +179,7 @@ function CategoryCard({
           >
             <input type="hidden" name="id" value={category.id} />
             <Field
-              label="Name"
+              label={tr("ui.name")}
               name="name"
               defaultValue={category.name}
               autoComplete="off"
@@ -177,7 +188,7 @@ function CategoryCard({
             />
             <IconPicker
               name="icon"
-              label="Icon"
+              label={tr("ui.icon")}
               options={CHORE_ICON_KEYS}
               defaultValue={category.icon}
             />
@@ -191,17 +202,19 @@ function CategoryCard({
               className={form.submit}
               disabled={editPending}
             >
-              {editPending ? "Saving…" : "Save changes"}
+              {editPending ? tr("ui.saving") : tr("ui.save.changes")}
             </button>
-            {editState.ok ? <p className={manage.success}>Saved.</p> : null}
+            {editState.ok ? (
+              <p className={manage.success}>{tr("ui.saved")}</p>
+            ) : null}
           </form>
         </details>
 
         <details className={`${ui.actionDisclosure} ${ui.pushRight}`}>
           <summary
             className={`${ui.iconBtn} ${ui.danger} ${ui.iconSummary}`}
-            aria-label={`Delete ${category.name}`}
-            title="Delete"
+            aria-label={tr("ui.delete.name", { p0: category.name })}
+            title={tr("ui.delete")}
           >
             <Trash2 size={18} aria-hidden="true" />
           </summary>
@@ -212,30 +225,34 @@ function CategoryCard({
             <input type="hidden" name="id" value={category.id} />
             {isOnly ? (
               <p className={styles.warn}>
-                This is your only category — add another before removing it.
+                {tr(
+                  "ui.this.is.your.only.category.add.another.before.removing",
+                )}
               </p>
             ) : hasChores ? (
               <>
                 <p className={styles.warn}>
-                  “{category.name}” has {chores(category.choreCount)}. Move{" "}
-                  {category.choreCount === 1 ? "it" : "them"} to:
+                  {tr("flow.categoryMove", {
+                    name: category.name,
+                    count: category.choreCount,
+                  })}
                 </p>
                 <select
                   name="reassignTo"
                   className={styles.select}
                   defaultValue={others[0]?.id}
-                  aria-label="Move chores to"
+                  aria-label={tr("ui.move.chores.to")}
                 >
                   {others.map((o) => (
                     <option key={o.id} value={o.id}>
-                      {o.name}
+                      <bdi>{o.name}</bdi>
                     </option>
                   ))}
                 </select>
               </>
             ) : (
               <p className={styles.warn}>
-                Remove “{category.name}”. This can’t be undone.
+                {tr("flow.categoryDelete", { name: category.name })}
               </p>
             )}
             {delState.error ? (
@@ -248,7 +265,9 @@ function CategoryCard({
               className={styles.dangerBtn}
               disabled={delPending || isOnly}
             >
-              {hasChores ? "Move chores & delete" : "Delete category"}
+              {hasChores
+                ? tr("ui.move.chores.delete")
+                : tr("ui.delete.category")}
             </button>
           </form>
         </details>

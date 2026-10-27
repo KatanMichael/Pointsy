@@ -116,10 +116,10 @@
   display: flex;
 }
 .pushRight {
-  margin-left: auto;
+  margin-inline-start: auto;
 }
 .pushRight[open] {
-  margin-left: 0;
+  margin-inline-start: 0;
 }
 .actionPanel {
   width: 100%;

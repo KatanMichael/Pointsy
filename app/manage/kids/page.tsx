@@ -1,3 +1,5 @@
+import { getRequestLocale } from "@/lib/i18n/server";
+import { translate, type Translator } from "@/lib/i18n";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth/session";
@@ -8,9 +10,15 @@ import { ScreenHeader } from "@/components/ui/ScreenHeader";
 import { ManageNav } from "@/components/manage/ManageNav";
 import styles from "@/components/manage/manage.module.css";
 
-export const metadata: Metadata = { title: "Manage kids" };
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getRequestLocale();
+  return { title: translate(locale, "meta.app.manage.kids.page.tsx.title") };
+}
 
 export default async function ManageKidsPage() {
+  const locale = await getRequestLocale();
+  const tr = translate.bind(null, locale) as Translator;
+
   const session = await getSession();
   if (!session) redirect("/sign-in");
   if (session.role !== "parent") redirect("/me");
@@ -19,7 +27,10 @@ export default async function ManageKidsPage() {
 
   return (
     <main id="main" className={styles.main}>
-      <ScreenHeader title="Kids" intro="Profiles, avatars, and sign-in PINs." />
+      <ScreenHeader
+        title={tr("ui.kids")}
+        intro={tr("ui.profiles.avatars.and.sign.in.pins")}
+      />
 
       {kids.length > 0 ? (
         <ul className={styles.list}>
@@ -39,7 +50,7 @@ export default async function ManageKidsPage() {
         </ul>
       ) : (
         <p className={styles.empty}>
-          No children yet — tap “Add a kid” to add your first.
+          {tr("ui.no.children.yet.tap.add.a.kid.to.add")}
         </p>
       )}
 

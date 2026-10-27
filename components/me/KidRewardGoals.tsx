@@ -1,3 +1,9 @@
+"use client";
+import { formatNumber } from "@/lib/i18n";
+
+import type { Translator } from "@/lib/i18n";
+
+import { useLocale, useTranslations } from "@/components/i18n/LocaleProvider";
 import { Hourglass } from "lucide-react";
 import { IconByName } from "@/components/icons/registry";
 import { RedeemButton } from "@/components/redeem/RedeemButton";
@@ -6,13 +12,18 @@ import hype from "./hype.module.css";
 import styles from "./special.module.css";
 
 /** A cheer that scales with how close the kid is — small wins feel like wins. */
-function cheer(pct: number, moreNeeded: number, pending: boolean): string {
-  if (pending) return "Requested — waiting for a grown-up ⏳";
-  if (moreNeeded === 0) return "You saved enough — go claim it! 🎉";
-  if (pct >= 75) return "So close — almost there! 💪";
-  if (pct >= 50) return "Over halfway! Keep going! 🚀";
-  if (pct >= 25) return "Great start — keep it up! ⭐";
-  return "Let's save up for this! ✨";
+function cheer(
+  pct: number,
+  moreNeeded: number,
+  pending: boolean,
+  tr: Translator,
+): string {
+  if (pending) return tr("ui.requested.waiting.for.a.grown.up");
+  if (moreNeeded === 0) return tr("ui.you.saved.enough.go.claim.it");
+  if (pct >= 75) return tr("ui.so.close.almost.there");
+  if (pct >= 50) return tr("ui.over.halfway.keep.going");
+  if (pct >= 25) return tr("ui.great.start.keep.it.up");
+  return tr("ui.let.s.save.up.for.this");
 }
 
 /**
@@ -21,12 +32,15 @@ function cheer(pct: number, moreNeeded: number, pending: boolean): string {
  * they've saved enough it flips to a celebratory claim button.
  */
 export function KidRewardGoals({ rewards }: { rewards: GoalProgress[] }) {
+  const locale = useLocale();
+  const tr = useTranslations();
+
   if (rewards.length === 0) return null;
 
   return (
     <section className={styles.section} aria-labelledby="just-for-you">
       <h2 id="just-for-you" className={hype.shelfTitle}>
-        🎯 Just for you
+        {tr("ui.just.for.you")}
       </h2>
       <ul className={styles.list}>
         {rewards.map((g) => {
@@ -51,9 +65,11 @@ export function KidRewardGoals({ rewards }: { rewards: GoalProgress[] }) {
                   pending={g.pending}
                 />
                 <div className={styles.info}>
-                  <span className={styles.name}>{g.reward.name}</span>
+                  <span className={styles.name}>
+                    <bdi>{g.reward.name}</bdi>
+                  </span>
                   <span className={styles.cheer}>
-                    {cheer(g.pct, g.moreNeeded, g.pending)}
+                    {cheer(g.pct, g.moreNeeded, g.pending, tr)}
                   </span>
                 </div>
               </div>
@@ -64,17 +80,21 @@ export function KidRewardGoals({ rewards }: { rewards: GoalProgress[] }) {
                 }
                 value={have}
                 max={g.reward.cost}
-                aria-label={`${have} of ${g.reward.cost} points toward ${g.reward.name}`}
+                aria-label={tr("ui.name.of.name.points.toward.name.52", {
+                  p0: have,
+                  p1: g.reward.cost,
+                  p2: g.reward.name,
+                })}
               />
 
               <div className={styles.foot}>
-                <span className={styles.count}>
-                  {have} / {g.reward.cost} pts
+                <span dir="ltr" className={styles.count}>
+                  {have} / {tr("flow.pts", { count: g.reward.cost })}
                 </span>
                 {g.pending ? (
                   <span className={styles.pending}>
                     <Hourglass size={13} aria-hidden="true" />
-                    Pending
+                    {tr("ui.pending")}
                   </span>
                 ) : ready ? (
                   <RedeemButton
@@ -83,10 +103,12 @@ export function KidRewardGoals({ rewards }: { rewards: GoalProgress[] }) {
                     cost={g.reward.cost}
                     className={styles.claim}
                   >
-                    Claim it!
+                    {tr("ui.claim.it")}
                   </RedeemButton>
                 ) : (
-                  <span className={styles.toGo}>{g.moreNeeded} to go</span>
+                  <span className={styles.toGo}>
+                    {formatNumber(locale, g.moreNeeded)} {tr("ui.to.go")}
+                  </span>
                 )}
               </div>
             </li>

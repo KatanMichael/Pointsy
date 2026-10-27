@@ -1,4 +1,6 @@
 "use client";
+import { translateFormState } from "@/lib/i18n/errors";
+import { useTranslations, useLocale } from "@/components/i18n/LocaleProvider";
 
 import { useActionState } from "react";
 import { Pencil, KeyRound, Power, Trash2 } from "lucide-react";
@@ -17,7 +19,7 @@ import { IconButton } from "@/components/ui/IconButton";
 import { Chip } from "@/components/ui/Chip";
 import { AVATAR_ICON_KEYS } from "@/lib/icons";
 import type { FormState } from "@/lib/validation/form";
-import { COLOR_OPTIONS } from "./options";
+import { colorName, COLOR_OPTIONS } from "./options";
 import form from "@/components/auth/auth-form.module.css";
 import ui from "@/components/ui/ui.module.css";
 import styles from "./manage.module.css";
@@ -33,31 +35,40 @@ export interface KidCardData {
 const initialState: FormState = {};
 
 export function KidCard({ kid }: { kid: KidCardData }) {
-  const [editState, editAction, editPending] = useActionState(
+  const tr = useTranslations();
+  const locale = useLocale();
+
+  const [editStateCodes, editAction, editPending] = useActionState(
     updateKidAction,
     initialState,
   );
-  const [pinState, pinAction, pinPending] = useActionState(
+  const editState = translateFormState(editStateCodes, tr);
+  const [pinStateCodes, pinAction, pinPending] = useActionState(
     setKidPinAction,
     initialState,
   );
+  const pinState = translateFormState(pinStateCodes, tr);
 
   return (
-    <Card aria-label={`Manage ${kid.name}`}>
+    <Card aria-label={tr("ui.manage.name", { p0: kid.name })}>
       <div className={styles.kidHead}>
         <span className={styles.avatar} style={{ background: kid.color }}>
           <IconByName name={kid.avatar} size={26} />
         </span>
-        <span className={styles.kidName}>{kid.name}</span>
-        {!kid.isActive ? <Chip variant="warning">Inactive</Chip> : null}
+        <span className={styles.kidName}>
+          <bdi>{kid.name}</bdi>
+        </span>
+        {!kid.isActive ? (
+          <Chip variant="warning">{tr("ui.inactive")}</Chip>
+        ) : null}
       </div>
 
       <div className={ui.actionRow}>
         <details className={ui.actionDisclosure}>
           <summary
             className={`${ui.iconBtn} ${ui.iconSummary}`}
-            aria-label={`Edit ${kid.name}’s profile`}
-            title="Edit profile"
+            aria-label={tr("ui.edit.name.s.profile", { p0: kid.name })}
+            title={tr("ui.edit.profile")}
           >
             <Pencil size={18} aria-hidden="true" />
           </summary>
@@ -68,7 +79,7 @@ export function KidCard({ kid }: { kid: KidCardData }) {
           >
             <input type="hidden" name="kidId" value={kid.id} />
             <Field
-              label="Name"
+              label={tr("ui.name")}
               name="name"
               defaultValue={kid.name}
               error={editState.fieldErrors?.name}
@@ -76,13 +87,13 @@ export function KidCard({ kid }: { kid: KidCardData }) {
             />
             <IconPicker
               name="avatar"
-              label="Avatar"
+              label={tr("ui.avatar")}
               options={AVATAR_ICON_KEYS}
               defaultValue={kid.avatar}
             />
             <div className={form.field}>
               <label htmlFor={`color-${kid.id}`} className={form.label}>
-                Color
+                {tr("ui.color")}
               </label>
               <select
                 id={`color-${kid.id}`}
@@ -92,7 +103,7 @@ export function KidCard({ kid }: { kid: KidCardData }) {
               >
                 {COLOR_OPTIONS.map((c) => (
                   <option key={c.value} value={c.value}>
-                    {c.name}
+                    {colorName(c.value, locale)}
                   </option>
                 ))}
               </select>
@@ -102,17 +113,19 @@ export function KidCard({ kid }: { kid: KidCardData }) {
               className={form.submit}
               disabled={editPending}
             >
-              {editPending ? "Saving…" : "Save changes"}
+              {editPending ? tr("ui.saving") : tr("ui.save.changes")}
             </button>
-            {editState.ok ? <p className={styles.success}>Saved.</p> : null}
+            {editState.ok ? (
+              <p className={styles.success}>{tr("ui.saved")}</p>
+            ) : null}
           </form>
         </details>
 
         <details className={ui.actionDisclosure}>
           <summary
             className={`${ui.iconBtn} ${ui.iconSummary}`}
-            aria-label={`Reset ${kid.name}’s PIN`}
-            title="Reset PIN"
+            aria-label={tr("ui.reset.name.s.pin", { p0: kid.name })}
+            title={tr("ui.reset.pin")}
           >
             <KeyRound size={18} aria-hidden="true" />
           </summary>
@@ -123,7 +136,7 @@ export function KidCard({ kid }: { kid: KidCardData }) {
           >
             <input type="hidden" name="kidId" value={kid.id} />
             <Field
-              label="New 4-digit PIN"
+              label={tr("ui.new.4.digit.pin")}
               name="pin"
               type="text"
               inputMode="numeric"
@@ -133,10 +146,10 @@ export function KidCard({ kid }: { kid: KidCardData }) {
               required
             />
             <button type="submit" className={form.submit} disabled={pinPending}>
-              {pinPending ? "Saving…" : "Set new PIN"}
+              {pinPending ? tr("ui.saving") : tr("ui.set.new.pin")}
             </button>
             {pinState.ok ? (
-              <p className={styles.success}>PIN updated.</p>
+              <p className={styles.success}>{tr("ui.pin.updated")}</p>
             ) : null}
           </form>
         </details>
@@ -144,14 +157,17 @@ export function KidCard({ kid }: { kid: KidCardData }) {
         <ConfirmDeleteDisclosure
           detailsClassName={ui.actionDisclosure}
           summaryClassName={`${ui.iconBtn} ${ui.iconSummary}`}
-          summaryAriaLabel={`Delete ${kid.name} permanently`}
-          summaryTitle="Delete permanently"
+          summaryAriaLabel={tr("ui.delete.name.permanently", { p0: kid.name })}
+          summaryTitle={tr("ui.delete.permanently")}
           summary={<Trash2 size={18} aria-hidden="true" />}
           panelClassName={ui.actionPanel}
           action={deleteKidAction}
           confirmWord={kid.name}
-          buttonLabel="Delete permanently"
-          intro={`This permanently deletes ${kid.name} and all of their points history. This can’t be undone — to just hide them, use Deactivate instead.`}
+          buttonLabel={tr("ui.delete.permanently")}
+          intro={tr(
+            "ui.this.permanently.deletes.name.and.all.of.their.points.history",
+            { p0: kid.name },
+          )}
           hidden={[{ name: "kidId", value: kid.id }]}
         />
 
@@ -169,7 +185,9 @@ export function KidCard({ kid }: { kid: KidCardData }) {
             type="submit"
             variant={kid.isActive ? "default" : "accent"}
             label={
-              kid.isActive ? `Deactivate ${kid.name}` : `Reactivate ${kid.name}`
+              kid.isActive
+                ? tr("ui.deactivate.name", { p0: kid.name })
+                : tr("ui.reactivate.name", { p0: kid.name })
             }
           >
             <Power size={18} aria-hidden="true" />

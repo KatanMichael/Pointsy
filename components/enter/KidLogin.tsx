@@ -1,4 +1,6 @@
 "use client";
+import { translateFormState } from "@/lib/i18n/errors";
+import { useTranslations } from "@/components/i18n/LocaleProvider";
 
 import { useActionState, useState } from "react";
 import {
@@ -26,23 +28,26 @@ export function KidLogin({
 }: {
   initialFamily?: FamilyLookup | null;
 }) {
+  const tr = useTranslations();
+
   const [family, setFamily] = useState<FamilyLookup | null>(initialFamily);
   const [selected, setSelected] = useState<PickerMember | null>(null);
   const [code, setCode] = useState("");
-  const [codeError, setCodeError] = useState<string | null>(null);
+  const [codeError, setCodeError] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [pinState, pinAction, pinPending] = useActionState(
+  const [pinStateCodes, pinAction, pinPending] = useActionState(
     kidSignInAction,
     pinInitial,
   );
+  const pinState = translateFormState(pinStateCodes, tr);
 
   async function resolveCode(raw: string) {
     setLoading(true);
-    setCodeError(null);
+    setCodeError(false);
     const result = await lookupFamilyAction(raw);
     setLoading(false);
     if (!result) {
-      setCodeError("We couldn't find a family with that code.");
+      setCodeError(true);
       return;
     }
     setFamily(result);
@@ -60,10 +65,10 @@ export function KidLogin({
     return (
       <>
         <h1 id="enter-title" className={styles.title}>
-          Find your family
+          {tr("ui.find.your.family")}
         </h1>
         <p className={styles.subtitle}>
-          Enter your family code to see who&rsquo;s in your family.
+          {tr("ui.enter.your.family.code.to.see.who.s.in")}
         </p>
         <form
           onSubmit={(e) => {
@@ -79,7 +84,7 @@ export function KidLogin({
               htmlFor="family-code"
               className={form.label}
             >
-              Family code
+              {tr("ui.family.code")}
             </label>
             <input
               id="family-code"
@@ -95,20 +100,20 @@ export function KidLogin({
             />
             {codeError ? (
               <p id="code-err" role="alert" className={form.error}>
-                {codeError}
+                {tr("ui.we.couldn.t.find.a.family.with.that.code")}
               </p>
             ) : null}
           </div>
           <button type="submit" className={form.submit} disabled={loading}>
-            {loading ? "Looking…" : "Continue"}
+            {loading ? tr("ui.looking") : tr("ui.continue")}
           </button>
         </form>
         <div className={styles.altLinks}>
           <a href="/join" className={styles.textBtn}>
-            Invited as a co-parent? Enter your invite code
+            {tr("ui.invited.as.a.co.parent.enter.your.invite.code")}
           </a>
           <a href="/sign-in" className={styles.textBtn}>
-            Parent? Sign in with email &amp; password
+            {tr("ui.parent.sign.in.with.email.password")}
           </a>
         </div>
       </>
@@ -124,10 +129,10 @@ export function KidLogin({
           onClick={() => setSelected(null)}
           className={styles.textBtn}
         >
-          ← Choose someone else
+          {tr("ui.choose.someone.else")}
         </button>
         <h1 id="enter-title" className={styles.title}>
-          Hi {selected.name}!
+          {tr("auth.welcome", { name: selected.name })}!
         </h1>
         <div className={styles.pinStep}>
           <div className={styles.who}>
@@ -143,7 +148,7 @@ export function KidLogin({
             <input type="hidden" name="personId" value={selected.id} />
             <PinPad
               name="pin"
-              label="Enter your PIN"
+              label={tr("ui.enter.your.pin")}
               autoSubmit
               disabled={pinPending}
               errorNonce={pinState.attempt ?? 0}
@@ -154,7 +159,7 @@ export function KidLogin({
               </p>
             ) : null}
             <button type="submit" className={form.submit} disabled={pinPending}>
-              {pinPending ? "Checking…" : "Let's go"}
+              {pinPending ? tr("ui.checking") : tr("ui.let.s.go")}
             </button>
           </form>
         </div>
@@ -166,16 +171,20 @@ export function KidLogin({
   return (
     <>
       <h1 id="enter-title" className={styles.title}>
-        Who&rsquo;s signing in?
+        {tr("ui.who.s.signing.in")}
       </h1>
-      <p className={styles.subtitle}>Tap your name and enter your PIN.</p>
+      <p className={styles.subtitle}>
+        {tr("ui.tap.your.name.and.enter.your.pin")}
+      </p>
       <div className={styles.picker}>
-        <p className={styles.familyName}>{family.familyName}</p>
+        <p className={styles.familyName}>
+          <bdi>{family.familyName}</bdi>
+        </p>
         {family.members.length === 0 ? (
           <p className={styles.empty}>
-            No profiles yet. A parent can{" "}
-            <a href="/sign-in">sign in with email &amp; password</a> to set up
-            PINs.
+            {tr("ui.no.profiles.yet.a.parent.can")}{" "}
+            <a href="/sign-in">{tr("ui.sign.in.with.email.password")}</a>{" "}
+            {tr("ui.to.set.up.pins")}
           </p>
         ) : (
           <ul className={styles.grid}>
@@ -192,7 +201,9 @@ export function KidLogin({
                   >
                     <IconByName name={m.avatar} size={40} />
                   </span>
-                  <span className={styles.profileName}>{m.name}</span>
+                  <span className={styles.profileName}>
+                    <bdi>{m.name}</bdi>
+                  </span>
                 </button>
               </li>
             ))}
@@ -200,14 +211,14 @@ export function KidLogin({
         )}
         <div className={styles.pickerFooter}>
           <a href="/sign-in" className={styles.textBtn}>
-            Parent? Sign in with email &amp; password
+            {tr("ui.parent.sign.in.with.email.password")}
           </a>
           <button
             type="button"
             onClick={() => void forget()}
             className={styles.textBtn}
           >
-            Use a different family
+            {tr("ui.use.a.different.family")}
           </button>
         </div>
       </div>

@@ -2,15 +2,16 @@
 
 import { useEffect, useState } from "react";
 import { Bell, Check } from "lucide-react";
-import { subscribePushAction, unsubscribePushAction } from "@/app/actions/push";
+import {
+  subscribePushAction,
+  unsubscribePushAction,
+  syncPushLocaleAction,
+} from "@/app/actions/push";
 import styles from "./push.module.css";
+import { useLocale } from "@/components/i18n/LocaleProvider";
+import { systemCopy } from "@/lib/i18n/system";
 
 const VAPID_PUBLIC_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
-
-const COPY: Record<"parent" | "kid", string> = {
-  parent: "Get a heads-up the moment your child requests a reward.",
-  kid: "Get a heads-up when you earn points or a reward is approved.",
-};
 
 function urlBase64ToUint8Array(base64: string): Uint8Array {
   const padding = "=".repeat((4 - (base64.length % 4)) % 4);
@@ -28,6 +29,8 @@ export function EnableNotifications({
 }: {
   audience?: "parent" | "kid";
 }) {
+  const locale = useLocale();
+  const copy = systemCopy(locale);
   const [status, setStatus] = useState<Status>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -45,12 +48,14 @@ export function EnableNotifications({
       }
       const reg = await navigator.serviceWorker.getRegistration();
       const existing = reg ? await reg.pushManager.getSubscription() : null;
+      if (existing)
+        await syncPushLocaleAction(existing.endpoint).catch(() => undefined);
       if (active) setStatus({ supported: true, subscribed: Boolean(existing) });
     })();
     return () => {
       active = false;
     };
-  }, []);
+  }, [locale]);
 
   // Render only once we know the state, push is configured, and it's supported.
   if (!VAPID_PUBLIC_KEY || !status || !status.supported) return null;
@@ -63,7 +68,7 @@ export function EnableNotifications({
     try {
       const permission = await Notification.requestPermission();
       if (permission !== "granted") {
-        setError("Notifications are blocked in your browser settings.");
+        setError(copy.blocked);
         return;
       }
       const reg = await navigator.serviceWorker.ready;
@@ -78,9 +83,9 @@ export function EnableNotifications({
         auth: json.keys?.auth ?? "",
       });
       if (res.ok) setStatus({ supported: true, subscribed: true });
-      else setError("Could not save the subscription.");
+      else setError(copy.saveFailed);
     } catch {
-      setError("Could not enable notifications.");
+      setError(copy.enableFailed);
     } finally {
       setBusy(false);
     }
@@ -98,7 +103,7 @@ export function EnableNotifications({
       }
       setStatus({ supported: true, subscribed: false });
     } catch {
-      setError("Could not turn off notifications.");
+      setError(copy.disableFailed);
     } finally {
       setBusy(false);
     }
@@ -111,9 +116,11 @@ export function EnableNotifications({
       </span>
       <div className={styles.body}>
         <h2 id="notif-heading" className={styles.title}>
-          Notifications
+          {copy.notifications}
         </h2>
-        <p className={styles.desc}>{COPY[audience]}</p>
+        <p className={styles.desc}>
+          {copy[audience === "parent" ? "parentHint" : "kidHint"]}
+        </p>
         {error ? (
           <p role="alert" className={styles.error}>
             {error}
@@ -125,7 +132,7 @@ export function EnableNotifications({
           <>
             <span className={styles.statusOn}>
               <Check size={16} aria-hidden="true" />
-              On
+              {copy.on}
             </span>
             <button
               type="button"
@@ -133,7 +140,7 @@ export function EnableNotifications({
               disabled={busy}
               className={styles.linkBtn}
             >
-              {busy ? "Working…" : "Turn off"}
+              {busy ? copy.working : copy.turnOff}
             </button>
           </>
         ) : (
@@ -142,9 +149,9 @@ export function EnableNotifications({
             onClick={enable}
             disabled={busy}
             className={styles.enableBtn}
-            aria-label="Enable notifications"
+            aria-label={copy.enableLabel}
           >
-            {busy ? "Working…" : "Enable"}
+            {busy ? copy.working : copy.enable}
           </button>
         )}
       </div>

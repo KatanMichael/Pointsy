@@ -1,3 +1,6 @@
+import { formatNumber } from "@/lib/i18n";
+import { getRequestLocale } from "@/lib/i18n/server";
+import { translate, type Translator } from "@/lib/i18n";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { Lock, Hourglass } from "lucide-react";
@@ -22,9 +25,15 @@ import { KidTabBar } from "@/components/kid/KidTabBar";
 import { Users } from "lucide-react";
 import styles from "./redeem.module.css";
 
-export const metadata: Metadata = { title: "Redeem rewards" };
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getRequestLocale();
+  return { title: translate(locale, "meta.app.redeem.page.tsx.title") };
+}
 
 export default async function RedeemPage() {
+  const locale = await getRequestLocale();
+  const tr = translate.bind(null, locale) as Translator;
+
   const session = await getSession();
   if (!session) redirect("/enter");
   if (session.role !== "kid") redirect("/dashboard");
@@ -55,34 +64,37 @@ export default async function RedeemPage() {
 
   return (
     <main id="main" className={styles.main}>
-      <h1 className={styles.title}>Rewards</h1>
+      <h1 className={styles.title}>{tr("ui.rewards")}</h1>
       {available < 0 ? (
         <p className={styles.negative}>
-          You&rsquo;re at {available} points. Earn {-available} to get back to
-          zero, then you can spend!
+          {tr("flow.debt", { balance: available, needed: -available })}
         </p>
       ) : (
-        <p className={styles.available}>{available} points to spend</p>
+        <p className={styles.available}>
+          {formatNumber(locale, available)} {tr("ui.points.to.spend")}
+        </p>
       )}
 
       {pending.length > 0 ? (
         <section aria-labelledby="pending-title">
           <h2 id="pending-title" className={styles.sectionTitle}>
-            Waiting for a parent
+            {tr("ui.waiting.for.a.parent")}
           </h2>
           <ul className={styles.pendingList}>
             {pending.map((p) => (
               <li key={p.id} className={styles.pendingRow}>
                 <span className={styles.pendingText}>
-                  <span className={styles.pendingName}>{p.rewardName}</span>
+                  <span className={styles.pendingName}>
+                    <bdi>{p.rewardName}</bdi>
+                  </span>
                   <span className={styles.pendingMeta}>
-                    {p.cost} pts · pending
+                    {formatNumber(locale, p.cost)} {tr("ui.pts.pending")}
                   </span>
                 </span>
                 <form action={cancelRedemptionAction}>
                   <input type="hidden" name="redemptionId" value={p.id} />
                   <button type="submit" className={styles.cancelBtn}>
-                    Cancel
+                    {tr("ui.cancel")}
                   </button>
                 </form>
               </li>
@@ -96,7 +108,7 @@ export default async function RedeemPage() {
       {teamRewards.length > 0 ? (
         <section aria-labelledby="team-title">
           <h2 id="team-title" className={styles.sectionTitle}>
-            Team rewards
+            {tr("ui.team.rewards")}
           </h2>
           <div className={styles.grid}>
             {teamRewards.map((r) => {
@@ -107,8 +119,12 @@ export default async function RedeemPage() {
                   <span className={styles.rewardIcon}>
                     <IconByName name={r.emoji} size={26} />
                   </span>
-                  <span className={styles.rewardName}>{r.name}</span>
-                  <span className={styles.rewardCost}>{r.cost} pts</span>
+                  <span className={styles.rewardName}>
+                    <bdi>{r.name}</bdi>
+                  </span>
+                  <span className={styles.rewardCost}>
+                    {tr("flow.pts", { count: r.cost })}
+                  </span>
                   <div className={styles.teamActions}>
                     <TeamUpButton
                       reward={{
@@ -121,7 +137,7 @@ export default async function RedeemPage() {
                       className={styles.teamActionBtn}
                     >
                       <Users size={14} aria-hidden="true" />
-                      Team up
+                      {tr("ui.team.up")}
                     </TeamUpButton>
                     {canSolo ? (
                       <RedeemButton
@@ -130,7 +146,7 @@ export default async function RedeemPage() {
                         cost={r.cost}
                         className={styles.soloActionBtn}
                       >
-                        Solo
+                        {tr("ui.solo")}
                       </RedeemButton>
                     ) : null}
                   </div>
@@ -143,7 +159,7 @@ export default async function RedeemPage() {
 
       <section aria-labelledby="rewards-title">
         <h2 id="rewards-title" className={styles.sectionTitle}>
-          Spend your points
+          {tr("ui.spend.your.points")}
         </h2>
         {soloRewards.length > 0 ? (
           <div className={styles.grid}>
@@ -153,11 +169,15 @@ export default async function RedeemPage() {
                   <span className={styles.rewardIconLocked}>
                     <IconByName name={r.emoji} size={26} />
                   </span>
-                  <span className={styles.rewardName}>{r.name}</span>
-                  <span className={styles.rewardCost}>{r.cost} pts</span>
+                  <span className={styles.rewardName}>
+                    <bdi>{r.name}</bdi>
+                  </span>
+                  <span className={styles.rewardCost}>
+                    {tr("flow.pts", { count: r.cost })}
+                  </span>
                   <span className={styles.pendingPill}>
                     <Hourglass size={14} aria-hidden="true" />
-                    Pending
+                    {tr("ui.pending")}
                   </span>
                 </div>
               ) : r.affordable && available >= 0 ? (
@@ -171,27 +191,35 @@ export default async function RedeemPage() {
                   <span className={styles.rewardIcon}>
                     <IconByName name={r.emoji} size={26} />
                   </span>
-                  <span className={styles.rewardName}>{r.name}</span>
-                  <span className={styles.rewardCost}>{r.cost} pts</span>
-                  <span className={styles.redeemPill}>Redeem</span>
+                  <span className={styles.rewardName}>
+                    <bdi>{r.name}</bdi>
+                  </span>
+                  <span className={styles.rewardCost}>
+                    {tr("flow.pts", { count: r.cost })}
+                  </span>
+                  <span className={styles.redeemPill}>{tr("ui.redeem")}</span>
                 </RedeemButton>
               ) : (
                 <div key={r.id} className={styles.rewardLocked}>
                   <span className={styles.rewardIconLocked}>
                     <IconByName name={r.emoji} size={26} />
                   </span>
-                  <span className={styles.rewardName}>{r.name}</span>
-                  <span className={styles.rewardCost}>{r.cost} pts</span>
+                  <span className={styles.rewardName}>
+                    <bdi>{r.name}</bdi>
+                  </span>
+                  <span className={styles.rewardCost}>
+                    {tr("flow.pts", { count: r.cost })}
+                  </span>
                   <span className={styles.lockedPill}>
                     <Lock size={14} aria-hidden="true" />
-                    {r.moreNeeded} more
+                    {tr("flow.countMore", { count: r.moreNeeded })}
                   </span>
                 </div>
               ),
             )}
           </div>
         ) : (
-          <p className={styles.empty}>No rewards yet — ask a parent!</p>
+          <p className={styles.empty}>{tr("ui.no.rewards.yet.ask.a.parent")}</p>
         )}
       </section>
       <KidTabBar />

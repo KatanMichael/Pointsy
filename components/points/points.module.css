@@ -362,7 +362,7 @@
 
 .searchIcon {
   position: absolute;
-  left: var(--space-3);
+  inset-inline-start: var(--space-3);
   color: var(--color-text-muted);
   pointer-events: none;
 }
@@ -370,7 +370,8 @@
 .search {
   width: 100%;
   min-height: var(--tap-target);
-  padding: var(--space-2) var(--space-3) var(--space-2) 2.75rem;
+  padding-block: var(--space-2);
+  padding-inline: 2.75rem var(--space-3);
   font-size: 1rem;
   color: var(--color-text);
   background: var(--color-surface);
@@ -412,7 +413,7 @@
 }
 
 .groupCount {
-  margin-left: auto;
+  margin-inline-start: auto;
   font-weight: 600;
   font-size: 0.85rem;
   color: var(--color-text-muted);

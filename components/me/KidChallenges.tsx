@@ -1,23 +1,24 @@
+"use client";
+import { formatNumber } from "@/lib/i18n";
+
+import { useLocale, useTranslations } from "@/components/i18n/LocaleProvider";
 import { Trophy } from "lucide-react";
 import type { ChallengeProgress } from "@/lib/challenges/service";
-import type { ChallengeGoal } from "@/lib/db/schema";
-import styles from "./kid-challenges.module.css";
 
-const UNIT: Record<ChallengeGoal, string> = {
-  points: "points",
-  chore_count: "chores",
-  core_days: "days",
-};
+import styles from "./kid-challenges.module.css";
 
 /** Active challenges the kid is part of, with a live progress bar. */
 export function KidChallenges({ items }: { items: ChallengeProgress[] }) {
+  const locale = useLocale();
+  const tr = useTranslations();
+
   if (items.length === 0) return null;
 
   return (
     <section aria-labelledby="challenges-heading" className={styles.section}>
       <h2 id="challenges-heading" className={styles.heading}>
         <Trophy size={20} aria-hidden="true" />
-        Challenges
+        {tr("ui.challenges")}
       </h2>
       <ul className={styles.list}>
         {items.map((p) => {
@@ -30,8 +31,12 @@ export function KidChallenges({ items }: { items: ChallengeProgress[] }) {
               data-complete={done}
             >
               <div className={styles.top}>
-                <span className={styles.name}>{p.challenge.title}</span>
-                <span className={styles.bonus}>+{p.challenge.bonusPoints}</span>
+                <span className={styles.name}>
+                  <bdi>{p.challenge.title}</bdi>
+                </span>
+                <span className={styles.bonus}>
+                  +{formatNumber(locale, p.challenge.bonusPoints)}
+                </span>
               </div>
               {/* Decorative — the status line below states the numbers. */}
               <div className={styles.track} aria-hidden="true">
@@ -43,17 +48,24 @@ export function KidChallenges({ items }: { items: ChallengeProgress[] }) {
               </div>
               <p className={styles.status}>
                 {p.awarded
-                  ? "Done! Bonus earned 🎉"
+                  ? tr("ui.done.bonus.earned")
                   : p.pendingApproval
-                    ? "Done — waiting for a grown-up"
+                    ? tr("ui.done.waiting.for.a.grown.up")
                     : p.complete
-                      ? "Complete! 🎉"
-                      : `${shown} / ${p.target} ${UNIT[p.challenge.goalType]}`}
+                      ? tr("ui.complete")
+                      : tr(
+                          p.challenge.goalType === "points"
+                            ? "flow.progressPoints"
+                            : p.challenge.goalType === "chore_count"
+                              ? "flow.progressChores"
+                              : "flow.progressDays",
+                          { done: shown, total: p.target },
+                        )}
                 {p.challenge.scope === "family" ? (
-                  <span className={styles.team}> · Team</span>
+                  <span className={styles.team}> {tr("ui.team")}</span>
                 ) : null}
                 {p.challenge.recurrence === "weekly" ? (
-                  <span className={styles.team}> · Weekly</span>
+                  <span className={styles.team}> {tr("ui.weekly")}</span>
                 ) : null}
               </p>
             </li>

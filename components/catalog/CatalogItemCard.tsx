@@ -1,4 +1,6 @@
 "use client";
+import { translateFormState } from "@/lib/i18n/errors";
+import { useTranslations, useLocale } from "@/components/i18n/LocaleProvider";
 
 import { useActionState } from "react";
 import {
@@ -56,32 +58,49 @@ export function CatalogItemCard({
   item: CatalogItem;
   kids?: { id: string; name: string }[];
 }) {
-  const [editState, editAction, editPending] = useActionState(
+  const locale = useLocale();
+  const tr = useTranslations();
+
+  const [editStateCodes, editAction, editPending] = useActionState(
     updateCatalogItemAction,
     initialState,
   );
+  const editState = translateFormState(editStateCodes, tr);
 
   return (
-    <Card aria-label={`Manage ${item.name}`}>
+    <Card aria-label={tr("ui.manage.name.73", { p0: item.name })}>
       <div className={styles.head}>
         <span className={styles.emoji}>
           <IconByName name={item.emoji} size={26} />
         </span>
         <div className={styles.headText}>
-          <span className={styles.name}>{item.name}</span>
+          <span className={styles.name}>
+            <bdi>{item.name}</bdi>
+          </span>
           <div className={styles.metaRow}>
-            <Chip variant="accent">{item.value} pts</Chip>
+            <Chip variant="accent">
+              {tr("flow.pts", { count: item.value })}
+            </Chip>
             {kind === "chore" &&
             item.limitPeriod &&
             item.limitPeriod !== "none" ? (
               <Chip variant="neutral">
-                {formatChoreLimit(item.limitPeriod, item.limitCount ?? 1)}
+                {formatChoreLimit(
+                  item.limitPeriod,
+                  item.limitCount ?? 1,
+                  undefined,
+                  locale,
+                )}
               </Chip>
             ) : null}
-            {!item.isActive ? <Chip variant="warning">Hidden</Chip> : null}
+            {!item.isActive ? (
+              <Chip variant="warning">{tr("ui.hidden")}</Chip>
+            ) : null}
           </div>
           {item.description ? (
-            <span className={styles.desc}>{item.description}</span>
+            <span className={styles.desc}>
+              <bdi>{item.description}</bdi>
+            </span>
           ) : null}
         </div>
         <div className={styles.controls}>
@@ -99,8 +118,8 @@ export function CatalogItemCard({
                 aria-pressed={Boolean(item.pinned)}
                 label={
                   item.pinned
-                    ? `Unpin ${item.name}`
-                    : `Pin ${item.name} to the top`
+                    ? tr("ui.unpin.name", { p0: item.name })
+                    : tr("ui.pin.name.to.the.top", { p0: item.name })
                 }
               >
                 <Star
@@ -118,7 +137,7 @@ export function CatalogItemCard({
               type="submit"
               name="direction"
               value="up"
-              label={`Move ${item.name} up`}
+              label={tr("ui.move.name.up.76", { p0: item.name })}
             >
               <ChevronUp size={18} aria-hidden="true" />
             </IconButton>
@@ -126,7 +145,7 @@ export function CatalogItemCard({
               type="submit"
               name="direction"
               value="down"
-              label={`Move ${item.name} down`}
+              label={tr("ui.move.name.down.77", { p0: item.name })}
             >
               <ChevronDown size={18} aria-hidden="true" />
             </IconButton>
@@ -138,8 +157,8 @@ export function CatalogItemCard({
         <details className={ui.actionDisclosure}>
           <summary
             className={`${ui.iconBtn} ${ui.iconSummary}`}
-            aria-label={`Edit ${item.name}`}
-            title="Edit"
+            aria-label={tr("ui.edit.name.78", { p0: item.name })}
+            title={tr("ui.edit")}
           >
             <Pencil size={18} aria-hidden="true" />
           </summary>
@@ -172,9 +191,11 @@ export function CatalogItemCard({
               className={form.submit}
               disabled={editPending}
             >
-              {editPending ? "Saving…" : "Save changes"}
+              {editPending ? tr("ui.saving") : tr("ui.save.changes")}
             </button>
-            {editState.ok ? <p className={manage.success}>Saved.</p> : null}
+            {editState.ok ? (
+              <p className={manage.success}>{tr("ui.saved")}</p>
+            ) : null}
           </form>
         </details>
 
@@ -188,7 +209,9 @@ export function CatalogItemCard({
           />
           <IconButton
             type="submit"
-            label={item.isActive ? "Hide from kids" : "Show to kids"}
+            label={
+              item.isActive ? tr("ui.hide.from.kids") : tr("ui.show.to.kids")
+            }
           >
             {item.isActive ? (
               <EyeOff size={18} aria-hidden="true" />
@@ -201,8 +224,8 @@ export function CatalogItemCard({
         <details className={`${ui.actionDisclosure} ${ui.pushRight}`}>
           <summary
             className={`${ui.iconBtn} ${ui.danger} ${ui.iconSummary}`}
-            aria-label={`Delete ${item.name}`}
-            title="Delete"
+            aria-label={tr("ui.delete.name.79", { p0: item.name })}
+            title={tr("ui.delete")}
           >
             <Trash2 size={18} aria-hidden="true" />
           </summary>
@@ -213,10 +236,10 @@ export function CatalogItemCard({
             <input type="hidden" name="kind" value={kind} />
             <input type="hidden" name="id" value={item.id} />
             <p className={styles.warn}>
-              This permanently removes “{item.name}”. Past history is kept.
+              {tr("flow.deleteItem", { name: item.name })}
             </p>
             <button type="submit" className={styles.dangerBtn}>
-              Delete permanently
+              {tr("ui.delete.permanently")}
             </button>
           </form>
         </details>

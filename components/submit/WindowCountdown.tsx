@@ -1,4 +1,5 @@
 "use client";
+import { useTranslations, useLocale } from "@/components/i18n/LocaleProvider";
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -13,6 +14,9 @@ import styles from "@/app/submit/submit.module.css";
  * spoken label is on the value (no aria-live, so it doesn't announce each tick).
  */
 export function WindowCountdown({ opensAt }: { opensAt: string }) {
+  const locale = useLocale();
+  const tr = useTranslations();
+
   const router = useRouter();
   const target = new Date(opensAt).getTime();
   const [remaining, setRemaining] = useState(() =>
@@ -33,14 +37,17 @@ export function WindowCountdown({ opensAt }: { opensAt: string }) {
   return (
     <div className={styles.countdown}>
       <Hourglass size={18} aria-hidden="true" />
-      <span className={styles.countdownLabel} aria-hidden="true">
-        Unlocks in
+      <span dir="ltr" className={styles.countdownLabel} aria-hidden="true">
+        {tr("ui.unlocks.in")}
       </span>
       <span
+        dir="ltr"
         className={styles.countdownValue}
-        aria-label={`Unlocks in ${countdownAria(remaining)}`}
+        aria-label={tr("ui.unlocks.in.name", {
+          p0: countdownAria(remaining, locale),
+        })}
       >
-        {countdownText(remaining)}
+        {countdownText(remaining, locale)}
       </span>
     </div>
   );
